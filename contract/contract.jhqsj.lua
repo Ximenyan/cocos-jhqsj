@@ -30,6 +30,7 @@ local function c(name)
     contract.private_data = private_data
     return contract
 end
+
 local function PlayerAttr() return c(ATTRS_CONTRACT) end
 local function PlayerPackage() return c(PACKAGE_CONTRACT)end
 local function PlayerFarms() return c(FARMS_CONTRACT) end
@@ -63,6 +64,7 @@ function register(args)
     PlayerPackage().create()
     -- 创建农田
     PlayerFarms().create()
+    chainhelper:write_chain()
 end
 
 -- 农场相关接口
@@ -75,14 +77,16 @@ function farms(method, args)
     CPlayerFarms.CPlayerPackage = PlayerPackage()
     CPlayerFarms.CPlayerItems.CPlayerPackage =  CPlayerFarms.CPlayerPackage
     CPlayerFarms[method](args)
+    chainhelper:write_chain()
 end
 
 -- 提取NFT
-function WithdrawNFT(cid)
+function WithdrawNFT(cid,num)
     _check_account()
     _initPrivateData()
     local CPlayerPackage = PlayerPackage()
-    CPlayerPackage.withdraw(cid)
+    CPlayerPackage.withdraw(cid,num)
+    chainhelper:write_chain()
 end
 
 -- 充值NFT
@@ -91,6 +95,7 @@ function RechargeNFT(nft_id)
     _initPrivateData()
     local CPlayerPackage = PlayerPackage()
     CPlayerPackage.recharge(nft_id)
+    chainhelper:write_chain()
 end
 
 -- 丢弃
@@ -99,6 +104,7 @@ function Discard(cid, num)
     _initPrivateData()
     local CPlayerPackage = PlayerPackage()
     CPlayerPackage.spent_item(cid,num)
+    chainhelper:write_chain()
 end
 
 --暗号领取礼物
@@ -108,4 +114,5 @@ function ReceiveGift(secret_code)
     local CGiftContract = GiftContract()
     CGiftContract.CPlayerPackage = PlayerPackage()
     CGiftContract.ReceiveGift(secret_code)
+    chainhelper:write_chain()
 end

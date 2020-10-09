@@ -4,16 +4,12 @@
 --- DateTime: 10/7/20 2:21 AM
 ---
 
-local function save_pkg()
-    write_list = {private_data = {backpack = true}}
-    chainhelper:write_chain()
-end
+
 
 function create()
     if private_data.backpack == nil then
         private_data.backpack = {size = 20, goods = {}, count = 0}
     end
-    save_pkg()
 end
 
 --检查某类物品的数量
@@ -46,7 +42,6 @@ function pickup_item(cid, base_info)
         pack_info.count = pack_info.count + count
         assert(pack_info.count < pack_info.size, "#你的背包满了！#")
     end
-    save_pkg()
 end
 
 --消耗一个物品
@@ -64,12 +59,10 @@ function spent_item(cid, count)
         pack_info.goods[cid] = nil
         pack_info.count = pack_info.count - 1
     end
-    save_pkg()
 end
 
 --提取nft到钱包
 function withdraw(cid, count)
-    _ContractConfig()
     assert(type(count) == "number", "#count 类型不对！#")
     assert(count >= 1, "#count 不正确！#")
     count = math.floor(count)
@@ -79,21 +72,19 @@ function withdraw(cid, count)
     assert(pack_info.goods[cid].status == nil, "#物品状态不正确！")
     local good = pack_info.goods[cid]
     assert(good.count >= count, "#没这么多！#")
-    assert(good.isNft, "#该物品不是NFT!#")
+    assert(good.base_info.isNft, "#该物品不是NFT!#")
     good.base_info.count = count;
     chainhelper:create_nft_asset(contract_base_info.caller, G_CONFIG.WORLD_VIEW,
-            good.base_info, true, true)
+            cjson.encode(good.base_info), true, true)
     good.count = good.count - count
     if good.count == 0 then
         pack_info.goods[cid] = nil
         pack_info.count = pack_info.count - 1
     end
-    save_pkg()
 end
 
 --充值nft到游戏
 function recharge(nft_id)
-    _ContractConfig()
     assert(type(nft_id) == "string", "#参数NFT_ID不正确#")
     assert(string.sub(nft_id, 1, 4) == "4.2.",
             "#参数NFT_ID不正确#")

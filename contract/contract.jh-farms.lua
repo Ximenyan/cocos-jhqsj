@@ -31,11 +31,6 @@ local function _public_data()
     return chainhelper:get_contract_public_data(CONTRACT_FARMS)
 end
 
-local function _save()
-    write_list = { private_data = { farm = true } }
-    chainhelper:write_chain()
-end
-
 function rand_seed()
     _ContractConfig()
     -- 随机卖5种
@@ -111,7 +106,6 @@ function BuyShovel(args)
     CToken.TransferIn("COCOS",SHOVEL_PRICE)
     -- 放进背包
     CPlayerItems.create_item_to_package("g11040001", 1)
-    _save()
 end
 
 function BuySeed(args)
@@ -136,7 +130,6 @@ function BuySeed(args)
     CToken.TransferIn("COCOS",seed.price)
     -- 生成种子放进背包
     CPlayerItems.create_item_to_package(seed_id, seed_num)
-    _save()
 end
 
 function BuyLand(args)
@@ -167,7 +160,6 @@ function BuyLand(args)
     -- 消耗一把铁锹
     CPlayerPackage.spent_item(shovel_id, 1)
     chainhelper:log(attrs.name..land_key.."升级到了"..farm.lands[land_key].star.."级")
-    _save()
 end
 
 function Plant(args)
@@ -193,7 +185,6 @@ function Plant(args)
     plant.timestamp = chainhelper:time()
     plant.token_id = seed_config[seed_id].token_id
     land.plant = plant
-    _save()
 end
 
 function Reap(args)
@@ -223,6 +214,5 @@ function Reap(args)
     chainhelper:log('收获' .. total .. token_id)
     -- 解锁并转发到账户
     CToken.TransferOut(token_id, total)
-    _save()
 end
 function test() chainhelper:log('!- 3') end

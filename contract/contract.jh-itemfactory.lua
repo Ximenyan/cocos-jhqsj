@@ -50,8 +50,8 @@ local function _create_item(gid)
     -- 四个基本属性
     item.name = g_conf.name
     item.describe = g_conf.describe
-    item.icon = item.icon
-    item.isNft = item.isNft
+    item.icon = g_conf.icon
+    item.isNft = g_conf.isNft
     -- 计算GID
     if g_conf.isRandom then
         item.cid = item.gid .. "-" .. now_gid
