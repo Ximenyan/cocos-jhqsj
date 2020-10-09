@@ -94,7 +94,7 @@ function RechargeNFT(nft_id)
 end
 
 -- 丢弃
-function Discard(cid,num)
+function Discard(cid, num)
     _check_account()
     _initPrivateData()
     local CPlayerPackage = PlayerPackage()
