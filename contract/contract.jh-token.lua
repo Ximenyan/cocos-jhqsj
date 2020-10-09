@@ -3,7 +3,7 @@
 --- Created by wang.
 --- DateTime: 10/7/20 2:45 AM
 ---
-CONTRACT_NAME = "contract.jh-tokens"
+CONTRACT_NAME = "contract.jh-token"
 CONTRACT_CONFIGS = "contract.jh-configs"
 
 local function _ContractConfig()
@@ -28,10 +28,30 @@ function _TransferOut(symbol_or_id, amount)
     chainhelper:transfer_from_owner(G_CONFIG.caller, amount, symbol_or_id, true)
     end
 
-function TransferIn(symbol_or_id, amount)
+function _TransferIn(symbol_or_id, amount)
+    _ContractConfig()
+    assert(amount > 0, "#amount不正确!#")
+    local lock_amount = math.floor(amount * 0.9)
+    local accept_amount = amount - lock_amount
+    -- 90%锁在合约里等待将来分红，或是其他
+    chainhelper:transfer_from_caller(contract_base_info.owner, lock_amount, symbol_or_id, true)
+    chainhelper:adjust_lock_asset(symbol_or_id, lock_amount)
+    -- 转给开发账户 10% 用于运维和开发
+    chainhelper:transfer_from_caller(G_CONFIG.ASSET_ACCEPT_ACCOUNT, accept_amount, symbol_or_id, true)
+end
+
+function _LockAsset(symbol_or_id, amount)
+    assert(type(amount) == "number","#amount不确#")
     assert(amount > 0, "#amount不正确!#")
     chainhelper:transfer_from_caller(contract_base_info.owner, amount, symbol_or_id, true)
     chainhelper:adjust_lock_asset(symbol_or_id, amount)
+end
+
+function TransferIn(symbol_or_id, amount)
+    chainhelper:invoke_contract_function(CONTRACT_NAME, "_TransferIn", cjson.encode({
+        { 2, { v = symbol_or_id } },
+        { 1, { v = amount } }
+    }))
 end
 
 function TransferOut(symbol_or_id, amount)

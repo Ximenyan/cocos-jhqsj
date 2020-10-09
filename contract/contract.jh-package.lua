@@ -30,17 +30,20 @@ end
 
 --讲一个物品写入背包
 function pickup_item(cid, base_info)
+    local count = base_info.count
+    if count == nil then count = 1 end
+    base_info.count = nil
     if private_data.backpack == nil then
         private_data.backpack = {size = 20, goods = {}, count = 0}
     end
     local pack_info = private_data.backpack
     if pack_info.goods[cid] ~= nil then
         -- 消耗品增加数量
-        pack_info.goods[cid].count = pack_info.goods[cid].count + 1
+        pack_info.goods[cid].count = pack_info.goods[cid].count + count
     else
         -- 塞进背包
-        pack_info.goods[cid] = {base_info = base_info, count = 1}
-        pack_info.count = pack_info.count + 1
+        pack_info.goods[cid] = {base_info = base_info, count = count}
+        pack_info.count = pack_info.count + count
         assert(pack_info.count < pack_info.size, "#你的背包满了！#")
     end
     save_pkg()
@@ -65,16 +68,19 @@ function spent_item(cid, count)
 end
 
 --提取nft到钱包
-function withdraw(cid)
+function withdraw(cid, count)
     _ContractConfig()
+    assert(type(count) == "number", "#count 类型不对！#")
+    assert(count >= 1, "#count 不正确！#")
+    count = math.floor(count)
     pack_info = private_data.backpack
-    local count = 1
     assert(pack_info ~= nil, "#背包都没有，还想转！#")
     assert(pack_info.goods[cid] ~= nil, "#没有这个东西啦！#")
     assert(pack_info.goods[cid].status == nil, "#物品状态不正确！")
     local good = pack_info.goods[cid]
     assert(good.count >= count, "#没这么多！#")
     assert(good.isNft, "#该物品不是NFT!#")
+    good.base_info.count = count;
     chainhelper:create_nft_asset(contract_base_info.caller, G_CONFIG.WORLD_VIEW,
             good.base_info, true, true)
     good.count = good.count - count

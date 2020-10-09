@@ -113,7 +113,13 @@ function create_item_to_package(gid, num)
     do
         local item = _create_item(gid)
         -- 写入背包
-        CPlayerPackage.pickup_item(item.cid, item)
+        if g_conf.isRandom then
+            CPlayerPackage.pickup_item(item.cid, item)
+        else
+            item.count = num
+            CPlayerPackage.pickup_item(item.cid, item)
+            return
+        end
         num = num - 1
     end
 end

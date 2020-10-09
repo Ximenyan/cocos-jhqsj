@@ -10,6 +10,7 @@ ITEMS_CONTRACT = "contract.jh-itemfactory"
 ATTRS_CONTRACT = "contract.jh-player"
 FARMS_CONTRACT  = "contract.jh-farms"
 TOKEN_CONTRACT = "contract.jh-token"
+GIFT_CONTRACT = "contract.jh-gift"
 CONTRACT_CONFIGS = "contract.jh-configs"
 
 local function _ContractConfig()
@@ -34,6 +35,7 @@ local function PlayerPackage() return c(PACKAGE_CONTRACT)end
 local function PlayerFarms() return c(FARMS_CONTRACT) end
 local function PlayerItems() return c(ITEMS_CONTRACT) end
 local function TokenContract() return c(TOKEN_CONTRACT) end
+local function GiftContract() return c(GIFT_CONTRACT) end
 
 local function _check_account()
     _ContractConfig()
@@ -97,4 +99,13 @@ function Discard(cid,num)
     _initPrivateData()
     local CPlayerPackage = PlayerPackage()
     CPlayerPackage.spent_item(cid,num)
+end
+
+--暗号领取礼物
+function ReceiveGift(secret_code)
+    _check_account()
+    _initPrivateData()
+    local CGiftContract = GiftContract()
+    CGiftContract.CPlayerPackage = PlayerPackage()
+    CGiftContract.ReceiveGift(secret_code)
 end

@@ -39,10 +39,8 @@ end
 function rand_seed()
     _ContractConfig()
     -- 随机卖5种
-    assert(contract_base_info.invoker_contract_id == G_CONFIG.PLAYERS_CONTRACT_ID or
-            chainhelper:is_owner(),
-            "#没有权限！#")
-    read_list = { public_data = {} }
+    assert(chainhelper:is_owner(), "#没有权限！#")
+    read_list = { public_data = {}}
     chainhelper:read_chain()
     local shop = {}
     local seed_id_table = {}
@@ -110,10 +108,7 @@ function BuyShovel(args)
     -- 购买铲子
     -- 转账
     _ContractConfig()
-    chainhelper:transfer_from_caller(G_CONFIG.ASSET_ACCEPT_ACCOUNT,
-            SHOVEL_PRICE,
-            "COCOS",
-            true)
+    CToken.TransferIn("COCOS",SHOVEL_PRICE)
     -- 放进背包
     CPlayerItems.create_item_to_package("g11040001", 1)
     _save()
@@ -138,7 +133,7 @@ function BuySeed(args)
     chainhelper:invoke_contract_function(CONTRACT_FARMS, "sell_seed",
             cjson.encode(args))
     -- 转账
-    chainhelper:transfer_from_caller(G_CONFIG.ASSET_ACCEPT_ACCOUNT, seed.price, "COCOS", true)
+    CToken.TransferIn("COCOS",seed.price)
     -- 生成种子放进背包
     CPlayerItems.create_item_to_package(seed_id, seed_num)
     _save()
@@ -169,9 +164,9 @@ function BuyLand(args)
     assert(land.star < package.goods[shovel_id].base_info.star, "#请使用"..land.star.."星以上的铁锹升级土地!#")
     land.star = land.star + 1
     farm.lands[land_key] = land
+    -- 消耗一把铁锹
     CPlayerPackage.spent_item(shovel_id, 1)
     chainhelper:log(attrs.name..land_key.."升级到了"..farm.lands[land_key].star.."级")
-    -- 消耗一把铁锹
     _save()
 end
 
@@ -196,7 +191,6 @@ function Plant(args)
     plant.time = seed_config[seed_id].time
     plant.uint = seed_config[seed_id].uint
     plant.timestamp = chainhelper:time()
-    plant.reaptime = chainhelper:time()
     plant.token_id = seed_config[seed_id].token_id
     land.plant = plant
     _save()
@@ -212,22 +206,16 @@ function Reap(args)
     assert(land ~= nil, "#土地未开垦！#")
     assert(land.status, "#土地未种植！#")
     local plant = land.plant
-    local start_time = plant.reaptime
     local timestamp = plant.timestamp
     local token_id = plant.token_id
     local plant_time = plant.time
     local now_time = chainhelper:time()
-    if timestamp >= start_time then
-        start_time = timestamp
-    end
-    local time_long = now_time - start_time
+    local time_long = now_time - timestamp
     if now_time >= timestamp + plant_time then
-        time_long = timestamp + plant_time - start_time
-        land.plant = nil
-        land.status = false
-    else
-        plant.reaptime = now_time
+        time_long = plant_time
     end
+    land.plant = nil
+    land.status = false
     -- 保存数据
     local efficiency = OUTPUT_EFFICIENCY[land.star]
     local total = plant.uint * time_long * efficiency / 10
