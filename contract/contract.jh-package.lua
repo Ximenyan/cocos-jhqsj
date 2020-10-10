@@ -4,8 +4,6 @@
 --- DateTime: 10/7/20 2:21 AM
 ---
 
-
-
 function create()
     if private_data.backpack == nil then
         private_data.backpack = {size = 20, goods = {}, count = 0}
@@ -75,7 +73,7 @@ function withdraw(cid, count)
     assert(good.base_info.isNft, "#该物品不是NFT!#")
     good.base_info.count = count;
     chainhelper:create_nft_asset(contract_base_info.caller, G_CONFIG.WORLD_VIEW,
-            cjson.encode(good.base_info), true, true)
+            cjson.encode(good.base_info))
     good.count = good.count - count
     if good.count == 0 then
         pack_info.goods[cid] = nil

@@ -25,8 +25,8 @@ function _TransferOut(symbol_or_id, amount)
     end
     assert(auth or contract_base_info.caller == G_CONFIG.ASSET_ACCEPT_ACCOUNT,"#没有权限#")
     chainhelper:adjust_lock_asset(symbol_or_id, -amount)
-    chainhelper:transfer_from_owner(G_CONFIG.caller, amount, symbol_or_id, true)
-    end
+    chainhelper:transfer_from_owner(contract_base_info.caller, amount, symbol_or_id, true)
+end
 
 function _TransferIn(symbol_or_id, amount)
     _ContractConfig()

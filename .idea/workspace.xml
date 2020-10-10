@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="f17e0597-2afb-4440-957f-6843a77e459a" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/contract/contract.jh-farms.lua" beforeDir="false" afterPath="$PROJECT_DIR$/contract/contract.jh-farms.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/contract/contract.jh-package.lua" beforeDir="false" afterPath="$PROJECT_DIR$/contract/contract.jh-package.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/contract/contract.jh-token.lua" beforeDir="false" afterPath="$PROJECT_DIR$/contract/contract.jh-token.lua" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ServiceViewManager">
+    <option name="viewStates">
+      <list>
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
+      </list>
+    </option>
+  </component>
+</project>

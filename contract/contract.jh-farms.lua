@@ -13,10 +13,10 @@ CONTRACT_CONFIGS = "contract.jh-configs"
 PRE_SHOVEL_GID = "g11040001"
 PRE_SEED_GID = "g200101"
 -- 铁锹单价
-SHOVEL_PRICE = 10000
+SHOVEL_PRICE = 1000000
 -- 产出效率
-OUTPUT_EFFICIENCY = { 1, 1.3, 1.7, 2.2, 2.8, 3.5 }
-
+OUTPUT_EFFICIENCY = { 1, 1.3, 1.9, 2.9, 4.4, 6.5 }
+OUTPUT_EFFICIENCY = { 1, 1.3, 1.9, 2.9, 4.4, 6.5 }
 local function _ContractConfig()
     if G_CONFIG == nil then
         G_CONFIG = import_contract(CONTRACT_CONFIGS)
