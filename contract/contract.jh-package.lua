@@ -73,7 +73,7 @@ function withdraw(cid, count)
     assert(good.base_info.isNft, "#该物品不是NFT!#")
     good.base_info.count = count;
     chainhelper:create_nft_asset(contract_base_info.caller, G_CONFIG.WORLD_VIEW,
-            cjson.encode(good.base_info))
+            cjson.encode(good.base_info),false,false)
     good.count = good.count - count
     if good.count == 0 then
         pack_info.goods[cid] = nil
