@@ -39,6 +39,9 @@ local function TokenContract() return c(TOKEN_CONTRACT) end
 local function GiftContract() return c(GIFT_CONTRACT) end
 
 local function _check_account()
+    -- 拒绝合约调用
+    assert(contract_base_info.invoker_contract_id == "1.16.0",
+            "#没有权限！#")
     _ContractConfig()
     if G_CONFIG.TEST then
         assert(contract_base_info.caller == G_CONFIG.TEST_ACCOUNT,
@@ -71,6 +74,7 @@ end
 function farms(method, args)
     _check_account()
     _initPrivateData()
+    assert(private_data.ver, "#注册后才能调用！#")
     local CPlayerFarms = PlayerFarms()
     CPlayerFarms.CToken = TokenContract()
     CPlayerFarms.CPlayerItems = PlayerItems()
@@ -84,6 +88,7 @@ end
 function WithdrawNFT(cid,num)
     _check_account()
     _initPrivateData()
+    assert(private_data.ver, "#注册后才能调用！#")
     local CPlayerPackage = PlayerPackage()
     CPlayerPackage.withdraw(cid,num)
     chainhelper:write_chain()
@@ -93,6 +98,7 @@ end
 function RechargeNFT(nft_id)
     _check_account()
     _initPrivateData()
+    assert(private_data.ver, "#注册后才能调用！#")
     local CPlayerPackage = PlayerPackage()
     CPlayerPackage.recharge(nft_id)
     chainhelper:write_chain()
@@ -102,6 +108,7 @@ end
 function Discard(cid, num)
     _check_account()
     _initPrivateData()
+    assert(private_data.ver, "#注册后才能调用！#")
     local CPlayerPackage = PlayerPackage()
     CPlayerPackage.spent_item(cid,num)
     chainhelper:write_chain()
@@ -111,6 +118,7 @@ end
 function ReceiveGift(secret_code)
     _check_account()
     _initPrivateData()
+    assert(private_data.ver, "#注册后才能领取！#")
     local CGiftContract = GiftContract()
     CGiftContract.CPlayerPackage = PlayerPackage()
     CGiftContract.ReceiveGift(secret_code)

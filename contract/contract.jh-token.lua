@@ -31,12 +31,11 @@ end
 function _TransferIn(symbol_or_id, amount)
     _ContractConfig()
     assert(amount > 0, "#amount不正确!#")
-    local lock_amount = math.floor(amount * 0.9)
+    local lock_amount = math.floor(amount * (1 - G_CONFIG.DEV_DIVIDEND_RATE))
     local accept_amount = amount - lock_amount
-    -- 90%锁在合约里等待将来分红，或是其他
     chainhelper:transfer_from_caller(contract_base_info.owner, lock_amount, symbol_or_id, true)
     chainhelper:adjust_lock_asset(symbol_or_id, lock_amount)
-    -- 转给开发账户 10% 用于运维和开发
+    -- 转给开发账户 15% 用于运维和开发
     chainhelper:transfer_from_caller(G_CONFIG.ASSET_ACCEPT_ACCOUNT, accept_amount, symbol_or_id, true)
 end
 

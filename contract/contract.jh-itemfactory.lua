@@ -24,17 +24,17 @@ end
 local function _num_star(max_star)
     local r_num = chainhelper:random() % 1000
     local star = 0
-    if r_num > 995 then
+    if r_num > 997 then--0.2%
         star = 6
-    elseif r_num > 959 then
+    elseif r_num > 969 then -- 2.8%
         star = 5
-    elseif r_num > 879 then
+    elseif r_num > 919 then -- 5% 
         star = 4
-    elseif r_num > 749 then
+    elseif r_num > 809 then -- 11%
         star = 3
-    elseif r_num > 499 then
+    elseif r_num > 579 then -- %23
         star = 2
-    else
+    else -- % 58
         star = 1
     end
     if star > max_star then

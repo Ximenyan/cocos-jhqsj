@@ -10,6 +10,7 @@ TEST_ACCOUNT = "1.2.265483"
 PLAYERS_CONTRACT_ID   = "1.16.203"
 TOKEN_CONTRACT_WHITE_LIST = {"1.16.203"}
 WORLD_VIEW = "COCOS-JHQSJ"
+DEV_DIVIDEND_RATE = 0.15
 TEST = false
 VER = 1
 function test() chainhelper:log('!- 3') end

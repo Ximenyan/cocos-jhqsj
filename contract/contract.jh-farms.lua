@@ -13,10 +13,9 @@ CONTRACT_CONFIGS = "contract.jh-configs"
 PRE_SHOVEL_GID = "g11040001"
 PRE_SEED_GID = "g200101"
 -- 铁锹单价
-SHOVEL_PRICE = 1000000
+SHOVEL_PRICE = 500000000
 -- 产出效率
-OUTPUT_EFFICIENCY = { 1, 1.3, 1.9, 2.9, 4.4, 6.5 }
-OUTPUT_EFFICIENCY = { 1, 1.3, 1.9, 2.9, 4.4, 6.5 }
+OUTPUT_EFFICIENCY = { 1, 1.2, 1.6, 2.5, 4.2, 8 }
 local function _ContractConfig()
     if G_CONFIG == nil then
         G_CONFIG = import_contract(CONTRACT_CONFIGS)
@@ -31,27 +30,17 @@ local function _public_data()
     return chainhelper:get_contract_public_data(CONTRACT_FARMS)
 end
 
-function rand_seed()
+function update_shop(ids)
     _ContractConfig()
-    -- 随机卖5种
     assert(chainhelper:is_owner(), "#没有权限！#")
     read_list = { public_data = {}}
     chainhelper:read_chain()
     local shop = {}
-    local seed_id_table = {}
     local n = 1
-    for k in pairs(public_data.seed) do
-        seed_id_table[n] = k
-        n = n + 1
-    end
-    local num = 0
-    local len = #seed_id_table
-    while (num < 3 and num < len) do
-        local seed_id = seed_id_table[chainhelper:random() % n + 1]
-        if shop[seed_id] == nil then
-            num = num + 1
-            shop[seed_id] = public_data.seed[seed_id]
-        end
+    local len = #ids
+    while (n < len) do
+        local seed_id = ids[n]
+        shop[seed_id] = public_data.seed[seed_id]
     end
     public_data.shop = shop
     write_list = { public_data = { shop = true } }
