@@ -34,11 +34,12 @@ function update_shop(ids)
     _ContractConfig()
     assert(chainhelper:is_owner(), "#没有权限！#")
     read_list = { public_data = {}}
+    ids = cjson.decode(ids)
     chainhelper:read_chain()
     local shop = {}
     local n = 1
     local len = #ids
-    while (n < len) do
+    while (n <= len) do
         local seed_id = ids[n]
         shop[seed_id] = public_data.seed[seed_id]
     end
