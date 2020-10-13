@@ -67,7 +67,7 @@ function Withdraw()
         coin_symbol = DIVIDEND_COINS[i]
         balance = chainhelper:get_account_balance(G_CONFIG.TOKEN_POOL_ACCOUNT, coin_symbol)
         if(balance > 0) then
-            -- 当前池的百分之一,在乘以持股率
+            -- 当前池的百分之一,在乘以持股率,就是分红的金额
             withdraw_balance = (balance / 100) * (private_data.plegde_num / MAX_PLEDGE)
             withdraw_balance = math.floor(withdraw_balance)
             if withdraw_balance > 0 then 

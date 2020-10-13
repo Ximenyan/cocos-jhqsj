@@ -6,14 +6,13 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local function _get_data()
+local function _read_data()
     read_list = {public_data={}, private_data={}} 
     chainhelper:read_chain()
 end 
 
 function ToBanker()
-    _get_data()
-   
+    _read_data()
 end
 
 function Dice()
