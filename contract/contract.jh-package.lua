@@ -37,7 +37,7 @@ function pickup_item(cid, base_info)
     else
         -- 塞进背包
         pack_info.goods[cid] = {base_info = base_info, count = count}
-        pack_info.count = pack_info.count + count
+        pack_info.count = pack_info.count + 1
         assert(pack_info.count < pack_info.size, "#你的背包满了！#")
     end
 end
