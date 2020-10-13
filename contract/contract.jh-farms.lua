@@ -117,7 +117,7 @@ function BuySeed(args)
     chainhelper:invoke_contract_function(CONTRACT_FARMS, "sell_seed",
             cjson.encode(args))
     -- 转账
-    CToken.TransferIn("COCOS",seed.price)
+    CToken.TransferIn("COCOS",seed.price * seed_num)
     -- 生成种子放进背包
     CPlayerItems.create_item_to_package(seed_id, seed_num)
 end
