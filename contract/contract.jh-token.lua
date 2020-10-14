@@ -12,7 +12,7 @@ local function _read_data()
 end
 
 local function _save_data()
-    write_list = {private_data=true}
+    write_list = {private_data={}}}
     chainhelper:write_chain()
 end
 
@@ -21,7 +21,7 @@ function set_guide(account)
     assert(account ~= contract_base_info.caller,"#邀请人不能是自己！#")
     -- 填写邀请人 
     private_data.guide = account
-    _save()
+    _save_data()
 end
 
 local function _ContractConfig()
