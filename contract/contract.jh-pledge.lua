@@ -8,7 +8,7 @@
 PRECISION = 100000
 MIN_PLEDGE = 100 * PRECISION
 MAX_PLEDGE = 30000000 * PRECISION
-TIMES = 24 * 60 * 60
+TIMES = 1 * 60
 COIN_SYMBOL = "DSC"
 CONTRACT_TOKEN = "contract.jh-token"
 CONTRACT_CONFIGS = "contract.jh-configs"
@@ -24,12 +24,12 @@ local function _ContractConfig()
 end
 
 local function _read_data() 
-    read_list = {private_data={}}
+    read_list = {private_data={},public_data={}}
     chainhelper:read_chain()
 end
 
 local function _save_data()
-    write_list = {private_data=true}
+    write_list = {private_data={},public_data={}}
     chainhelper:write_chain()
 end
 
@@ -47,7 +47,10 @@ function Pledge(num)
     else
         private_data = {plegde_num=private_data.plegde_num + new_num,timestamp=chainhelper:time()}
     end
+    if public_data.total == nil then public_data.total = 0 end
+    public_data.total = public_data.total + new_num
     chainhelper:log(contract_base_info.caller .. "质押了" .. num .. "DSC!")
+    _save_data()
 end
 
 function Withdraw()
@@ -60,7 +63,6 @@ function Withdraw()
     local DIVIDEND_COINS = G_CONFIG.DIVIDEND_COINS
     local balance = 0
     local withdraw_balance = 0
-    local guide_balance = 0
     local coin_symbol = ""
     private_data.timestamp = chainhelper:time()
     for i=1,#DIVIDEND_COINS do 
@@ -68,7 +70,7 @@ function Withdraw()
         balance = chainhelper:get_account_balance(G_CONFIG.TOKEN_POOL_ACCOUNT, coin_symbol)
         if(balance > 0) then
             -- 当前池的百分之一,在乘以持股率,就是分红的金额
-            withdraw_balance = (balance / 100) * (private_data.plegde_num / MAX_PLEDGE)
+            withdraw_balance = (balance / 100) * (private_data.plegde_num / public_data.total)
             withdraw_balance = math.floor(withdraw_balance)
             if withdraw_balance > 0 then 
                 CToken.TransferOut(coin_symbol, withdraw_balance)
@@ -85,8 +87,9 @@ function Redeem()
     assert(chainhelper:time() > (private_data.timestamp + TIMES),"#领取或质押24小时后可赎回！#")
     chainhelper:adjust_lock_asset(COIN_SYMBOL, -private_data.plegde_num)--解锁仓
     chainhelper:transfer_from_owner(contract_base_info.caller, private_data.plegde_num, COIN_SYMBOL,true)
+    chainhelper:log(contract_base_info.caller .. "赎回了" .. private_data.plegde_num .. "DSC!")
     private_data.plegde_num = 0
     private_data.timestamp = chainhelper:time()
-    chainhelper:log(contract_base_info.caller .. "赎回了" .. private_data.plegde_num .. "DSC!")
+    public_data.total = public_data.total - private_data.plegde_num
     _save_data()
 end
