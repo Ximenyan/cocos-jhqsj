@@ -33,7 +33,6 @@ local function _save_data()
     chainhelper:write_chain()
 end
 
-
 function Pledge(num) 
     --  持质押持股
     _read_data()
@@ -88,8 +87,8 @@ function Redeem()
     chainhelper:adjust_lock_asset(COIN_SYMBOL, -private_data.plegde_num)--解锁仓
     chainhelper:transfer_from_owner(contract_base_info.caller, private_data.plegde_num, COIN_SYMBOL,true)
     chainhelper:log(contract_base_info.caller .. "赎回了" .. private_data.plegde_num .. "DSC!")
+    public_data.total = public_data.total - private_data.plegde_num
     private_data.plegde_num = 0
     private_data.timestamp = chainhelper:time()
-    public_data.total = public_data.total - private_data.plegde_num
     _save_data()
 end

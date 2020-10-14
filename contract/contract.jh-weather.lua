@@ -17,7 +17,7 @@ end
 function init() 
     read_list = {public_data={}}
     chainhelper:read_chain()
-    public_data.wather_table = {
+    public_data.weather_table = {
         sunny=1,
         rain=1,
         snow=1,
@@ -36,7 +36,7 @@ function _save_data()
     chainhelper:write_chain()
 end
 
-function SetWather(nft_id,wather)  
+function SetWeather(nft_id,weather)  
     _read_data() 
     assert(type(nft_id) == "string", "#参数NFT_ID不正确#")
     _ContractConfig()
@@ -49,19 +49,19 @@ function SetWather(nft_id,wather)
     assert(describe.name == "天气徽章", "#这个不是天气徽章！#")  
     assert(nft.nh_asset_active == contract_base_info.caller,
             "#没有使用权!#")
-    local old_wather = describe_with_contract.wather
+    local old_weather = describe_with_contract.weather
     if describe_with_contract.timestamp == nil then describe_with_contract.timestamp = 0 end
     assert((chainhelper:time() - describe_with_contract.timestamp) > TIMES,"#冷却中！#") 
-    local wather_table = public_data.wather_table
-    assert(wather_table[wather]~=nil,"#参数错误！#")
-    if old_wather ~= nil then wather_table[old_wather] = wather_table[old_wather] - 1 end
-    wather_table[wather] = wather_table[wather] + 1
+    local weather_table = public_data.weather_table
+    assert(weather_table[weather]~=nil,"#参数错误！#")
+    if old_weather ~= nil then weather_table[old_weather] = weather_table[old_weather] - 1 end
+    weather_table[weather] = weather_table[weather] + 1
     chainhelper:nht_describe_change(nft_id, "timestamp", chainhelper:time(), true)
-    chainhelper:nht_describe_change(nft_id, "wather", wather, true)
+    chainhelper:nht_describe_change(nft_id, "weather", weather, true)
     _save_data()
 end 
 
-function BuyWatherBadge() 
+function BuyWeatherBadge() 
     _read_data() 
     _ContractConfig()
     assert(public_data.total < TOTAL, "#天选之人数量已经足够了！#")
