@@ -37,7 +37,7 @@ function pickup_item(cid, base_info)
     else
         -- 塞进背包
         pack_info.goods[cid] = {base_info = base_info, count = count}
-        pack_info.count = pack_info.count + count
+        pack_info.count = pack_info.count + 1
         assert(pack_info.count < pack_info.size, "#你的背包满了！#")
     end
 end
@@ -96,7 +96,7 @@ function recharge(nft_id)
     assert(nft.dealership == contract_base_info.caller,
             "#NFT 权限不正确#")
     local base_info = cjson.decode(nft.base_describe)
-
+    assert(base_info.cid ~= nil, "该物品不能充值！")
     chainhelper:transfer_nht_from_caller(G_CONFIG.NFT_DESTROY_ACCOUNT, nft_id, true)
     pickup_item(base_info.cid, base_info)
 end

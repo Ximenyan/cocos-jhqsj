@@ -3,14 +3,29 @@
 --- Created by wang.
 --- DateTime: 10/7/20 2:33 AM
 ---
-
+-- NFT销毁账户
 NFT_DESTROY_ACCOUNT  = "1.2.265483"
+-- 开发者接受账户
 ASSET_ACCEPT_ACCOUNT = "1.2.265483"
+-- 社区接受账户
+COMMUNITY_ACCEPT_ACCOUNT = "1.2.265483"
+-- 代币池账户
+TOKEN_POOL_ACCOUNT = "1.2.265483"
+-- 测试账户
 TEST_ACCOUNT = "1.2.265483"
+-- 玩家接口合约
 PLAYERS_CONTRACT_ID   = "1.16.203"
+-- 白名单合约
 TOKEN_CONTRACT_WHITE_LIST = {"1.16.203"}
+-- 世界观
 WORLD_VIEW = "COCOS-JHQSJ"
-DEV_DIVIDEND_RATE = 0.15
+-- 开发者税收比例
+DEV_DIVIDEND_RATE = 0.05
+-- 社区税收比例
+COMMUNITY_DIVIDEND_RATE = 0.03
+-- 邀请者税收比例
+GUIDE_DIVIDEND_RATE = 0.01
+DIVIDEND_COINS = {"COCOS"}
 TEST = false
 VER = 1
 function test() chainhelper:log('!- 3') end
