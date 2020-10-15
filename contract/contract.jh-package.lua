@@ -3,6 +3,12 @@
 --- Created by wang.
 --- DateTime: 10/7/20 2:21 AM
 ---
+CONTRACT_ITEMFACTORY = "contract.jh-itemfactory"
+local function _init_items_config()
+    local data = chainhelper:get_contract_public_data(CONTRACT_ITEMFACTORY)
+    _items_config = data._items_config
+    now_gid = data.now_gid
+end
 
 function create()
     if private_data.backpack == nil then
@@ -61,6 +67,7 @@ end
 
 --提取nft到钱包
 function withdraw(cid, count)
+    _init_items_config()
     assert(type(count) == "number", "#count 类型不对！#")
     assert(count >= 1, "#count 不正确！#")
     count = math.floor(count)
@@ -72,9 +79,15 @@ function withdraw(cid, count)
     assert(good.count >= count, "#没这么多！#")
     assert(good.base_info.isNft, "#该物品不是NFT!#")
     good.base_info.count = count;
+    local g_conf = _items_config[good.base_info.gid]
+    good.base_info.describe = g_conf.describe
+    good.base_info.icon = g_conf.icon
     chainhelper:create_nft_asset(contract_base_info.caller, G_CONFIG.WORLD_VIEW,
             cjson.encode(good.base_info),false,false)
     good.count = good.count - count
+    -- 删除没必要的信息，节省存储
+    good.base_info.describe = nil
+    good.base_info.icon = nil
     if good.count == 0 then
         pack_info.goods[cid] = nil
         pack_info.count = pack_info.count - 1
@@ -98,6 +111,8 @@ function recharge(nft_id)
     local base_info = cjson.decode(nft.base_describe)
     assert(base_info.cid ~= nil, "该物品不能充值！")
     chainhelper:transfer_nht_from_caller(G_CONFIG.NFT_DESTROY_ACCOUNT, nft_id, true)
+    base_info.describe = nil
+    base_info.icon = nil
     pickup_item(base_info.cid, base_info)
 end
 function test() chainhelper:log('!- 3') end

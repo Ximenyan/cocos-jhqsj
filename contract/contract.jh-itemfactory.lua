@@ -16,7 +16,7 @@ local function _ContractConfig()
 end
 
 local function _init_items_config()
-    local data = chainhelper:get_contract_public_data(CONTRACT_NAME)
+    local data = chainhelper:get_contract_public_data(CONTRACT_ITEMFACTORY)
     _items_config = data._items_config
     now_gid = data.now_gid
 end
@@ -49,8 +49,8 @@ local function _create_item(gid)
     local item = { gid = gid, cid = gid }
     -- 四个基本属性
     item.name = g_conf.name
-    item.describe = g_conf.describe
-    item.icon = g_conf.icon
+    --item.describe = g_conf.describe
+    --item.icon = g_conf.icon
     item.isNft = g_conf.isNft
     -- 计算GID
     if g_conf.isRandom then
