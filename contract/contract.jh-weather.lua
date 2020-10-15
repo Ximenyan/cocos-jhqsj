@@ -14,6 +14,20 @@ local function _ContractConfig()
     end
 end
 
+local function _get_nft_contract_info(describe_with_contract) 
+    for _, contract in pairs(describe_with_contract) do
+        if contract[1] == contract_base_info.id then
+            for _, describe in pairs(contract[2]) do
+                if describe[1] == "nft_contract_info" then
+                    return cjson.decode(describe[2])
+                end
+            end
+            return {}
+        end
+    end
+    return {}
+end
+
 function init() 
     read_list = {public_data={}}
     chainhelper:read_chain()
@@ -45,7 +59,7 @@ function SetWeather(nft_id,weather)
     local nft = cjson.decode(chainhelper:get_nft_asset(nft_id))
     local describe = cjson.decode(nft.base_describe)
     assert(nft.world_view == G_CONFIG.WORLD_VIEW, "#不是同一个世界观#")
-    local describe_with_contract = nft.describe_with_contract  
+    local describe_with_contract = _get_nft_contract_info(nft.describe_with_contract)  
     assert(describe.name == "天气徽章", "#这个不是天气徽章！#")  
     assert(nft.nh_asset_active == contract_base_info.caller,
             "#没有使用权!#")
@@ -56,8 +70,9 @@ function SetWeather(nft_id,weather)
     assert(weather_table[weather]~=nil,"#参数错误！#")
     if old_weather ~= nil then weather_table[old_weather] = weather_table[old_weather] - 1 end
     weather_table[weather] = weather_table[weather] + 1
-    chainhelper:nht_describe_change(nft_id, "timestamp", chainhelper:time(), true)
-    chainhelper:nht_describe_change(nft_id, "weather", weather, true)
+    describe_with_contract.timestamp = chainhelper:time()
+    describe_with_contract.weather = weather
+    chainhelper:nht_describe_change(nft_id, "nft_contract_info", cjson.encode(describe_with_contract), false)
     _save_data()
 end 
 

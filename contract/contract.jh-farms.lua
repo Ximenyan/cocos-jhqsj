@@ -10,6 +10,7 @@ LAND_TOTAL = 10
 REFRESH_TIME = 60 * 60 * 24
 CONTRACT_FARMS = "contract.jh-farms"
 CONTRACT_CONFIGS = "contract.jh-configs"
+NFT_CONTRACT_INFO = "NFT_CONTRACT_INFO"
 PRE_SHOVEL_GID = "g11040001"
 PRE_SEED_GID = "g200101"
 -- 铁锹单价
@@ -28,6 +29,45 @@ end
 
 local function _public_data()
     return chainhelper:get_contract_public_data(CONTRACT_FARMS)
+end
+
+local function _get_nft_contract_info(nft_id) 
+    local nft = cjson.decode(chainhelper:get_nft_asset(nft_id))
+    for _, contract in pairs(nft.describe_with_contract) do
+        if contract[1] == contract_base_info.id then
+            for _, describe in pairs(contract[2]) do
+                if describe[1] == NFT_CONTRACT_INFO then
+                    return cjson.decode(describe[2])
+                end
+            end
+            return {}
+        end
+    end
+    return {}
+end
+
+function create()
+    -- 创建农场
+    assert(private_data.farm == nil, '#已有农场不需要再创建！#')
+    local attrs = private_data.attrs
+    -- 创建nft共享数据
+    local base_info = {
+        name= attrs.name.."的农田",
+    }
+    local nft_id = chainhelper:create_nft_asset(contract_base_info.owner, G_CONFIG.WORLD_VIEW,
+            cjson.encode(base_info),true,true)
+    chainhelper:change_nht_active_by_owner(contract_base_info.caller, nft_id, true)
+    -- 10块农田写入信息
+    local nft_contract_info = {}
+    for i=0,9 do 
+        nft_contract_info["land_" .. i] = {}
+    end
+    -- 记录农田信息
+    private_data.farm = { 
+        nft_id = nft_id
+    }
+    chainhelper:nht_describe_change(nft_id, NFT_CONTRACT_INFO, cjson.encode(nft_contract_info), false)
+    chainhelper:write_chain()
 end
 
 function update_shop(ids)
@@ -81,14 +121,6 @@ function UpdateSeed(id, args)
     chainhelper:write_chain()
 end
 
-function create()
-    -- 创建农场
-    assert(private_data.farm == nil, '#已有农场不需要再创建！#')
-    private_data.farm = { balance = 0,
-                          lands = {} }
-    chainhelper:write_chain()
-end
-
 function BuyShovel(args)
     -- 购买铲子
     -- 转账
@@ -134,22 +166,24 @@ function BuyLand(args)
     assert(string.sub(shovel_id, 1, 9) == PRE_SHOVEL_GID,
             "#参数shovle_id不正确#")
     local farm = private_data.farm
+    local nft_land = _get_nft_contract_info(farm.nft_id)
+    local land = nft_land[land_key]
+    assert(land ~= nil,"#土地编号不正确！#")
     local package = private_data.backpack
     local attrs = private_data.attrs
-    assert(farm.balance <= LAND_TOTAL, "#土地数量最多8块！")
-    local land = farm.lands[land_key]
-    if land == nil then
-        farm.balance = farm.balance + 1
+    if land.status == nil then
         land = { status = false, star = 0 }
     else
         assert(land.status == false, "#土地上有植物,暂时不能升级!#")
     end
     assert(land.star < package.goods[shovel_id].base_info.star, "#请使用"..land.star.."星以上的铁锹升级土地!#")
     land.star = land.star + 1
-    farm.lands[land_key] = land
     -- 消耗一把铁锹
     CPlayerPackage.spent_item(shovel_id, 1)
-    chainhelper:log(attrs.name..land_key.."升级到了"..farm.lands[land_key].star.."级")
+    chainhelper:log(attrs.name..land_key.."升级到了"..land.star.."级")
+    -- 记录到nft以备共享数据
+    nft_land[land_key] = land
+    chainhelper:nht_describe_change(farm.nft_id,NFT_CONTRACT_INFO,cjson.encode(nft_land),false)
 end
 
 function Plant(args)
@@ -160,12 +194,13 @@ function Plant(args)
     local land_key = _args[1]
     local seed_id = _args[2]
     assert(string.sub(seed_id, 1, 7) == PRE_SEED_GID, "#别乱种！#")
-    assert(farm.lands[land_key] ~= nil, "#这块土地还未开垦！")
-    assert(farm.lands[land_key].status == false, "#这块土地已经种上了!#")
+    local nft_land = _get_nft_contract_info(farm.nft_id)
+    local land = nft_land[land_key]
+    assert(land ~= nil,"#土地还未开垦！#")
+    assert(land.status == false, "#这块土地已经种上了!#")
     -- 消耗一颗种子
     CPlayerPackage.spent_item(seed_id, 1)
     local seed_config = _public_data().seed
-    local land = farm.lands[land_key]
     local plant = {}
     land.status = true
     plant.star = seed_config[seed_id].star
@@ -174,7 +209,11 @@ function Plant(args)
     plant.uint = seed_config[seed_id].uint
     plant.timestamp = chainhelper:time()
     plant.token_id = seed_config[seed_id].token_id
+    -- 记录到NFT
     land.plant = plant
+    -- 记录到nft以备共享数据
+    nft_land[land_key] = land
+    chainhelper:nht_describe_change(farm.nft_id,NFT_CONTRACT_INFO,cjson.encode(nft_land),false)
 end
 
 function Reap(args)
@@ -183,8 +222,9 @@ function Reap(args)
     assert(#_args == 1, "#参数不对！#")
     local farm = private_data.farm
     local land_key = _args[1]
-    local land = farm.lands[land_key]
-    assert(land ~= nil, "#土地未开垦！#")
+    local nft_land = _get_nft_contract_info(farm.nft_id)
+    local land =  nft_land[land_key]
+    assert(land ~= nil,"#土地未开垦！#")
     assert(land.status, "#土地未种植！#")
     local plant = land.plant
     local timestamp = plant.timestamp
@@ -204,5 +244,10 @@ function Reap(args)
     chainhelper:log('收获' .. total .. token_id)
     -- 解锁并转发到账户
     CToken.TransferOut(token_id, total)
+    -- 记录到nft以备共享数据
+    nft_land[land_key] = land
+    chainhelper:nht_describe_change(farm.nft_id,NFT_CONTRACT_INFO,cjson.encode(nft_land),false)
 end
+
+
 function test() chainhelper:log('!- 3') end
