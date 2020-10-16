@@ -19,6 +19,9 @@ end
 function set_guide(account)
     _read_data()
     assert(account ~= contract_base_info.caller,"#邀请人不能是自己！#")
+    assert(private_data.guide == nil, "#已经填写过接引人了！#")
+    local balance = chainhelper:get_account_balance(account, "DSC")
+    assert(balance > 100000, "#持有DSC大于1的人，才能当接引人！#")
     -- 填写邀请人 
     private_data.guide = account
     _save_data()
