@@ -12,7 +12,7 @@ local function _read_data()
 end
 
 local function _save_data()
-    write_list = {private_data={}}}
+    write_list = {private_data={}}
     chainhelper:write_chain()
 end
 
