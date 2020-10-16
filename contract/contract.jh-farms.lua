@@ -296,6 +296,8 @@ function Steal(args)
     chainhelper:log(contract_base_info.caller .. '偷取' .. total .. token_id)
     -- 解锁并转发到账户
     CToken.TransferOut(token_id, total)
+    -- 罚金
+    CToken.TransferIn("COCOS", G_CONFIG.STEAL_FORFEIT)
     -- 记录到nft以备共享数据
     land.steal_count = land.steal_count + 1 -- 被偷次数+1
     land.steal_info[contract_base_info.caller] = total -- 记录偷盗者信息，方便报仇，雪恨

@@ -27,7 +27,12 @@ DEV_DIVIDEND_RATE = 0.05
 COMMUNITY_DIVIDEND_RATE = 0.03
 -- 邀请者税收比例
 GUIDE_DIVIDEND_RATE = 0.01
+-- 分红代币
 DIVIDEND_COINS = {"COCOS"}
+-- 偷窃罚金 55COCOS
+STEAL_FORFEIT = 5500000
+-- 测试状态
 TEST = false
+-- 版本
 VER = 1
 function test() chainhelper:log('!- 3') end
