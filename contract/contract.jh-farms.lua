@@ -13,6 +13,8 @@ CONTRACT_CONFIGS = "contract.jh-configs"
 NFT_CONTRACT_INFO = "NFT_CONTRACT_INFO"
 PRE_SHOVEL_GID = "g11040001"
 PRE_SEED_GID = "g200101"
+-- 最大偷菜次数
+MAX_STEAL_COUNT = 5
 -- 铁锹单价
 SHOVEL_PRICE = 500000000
 -- 产出效率
@@ -234,6 +236,7 @@ function Reap(args)
     local land =  nft_land[land_key]
     assert(land ~= nil,"#土地未开垦！#")
     assert(land.status, "#土地未种植！#")
+    if land.steal_count == nil then land.steal_count = 0 end
     local plant = land.plant
     local timestamp = plant.timestamp
     local token_id = plant.token_id
@@ -243,21 +246,60 @@ function Reap(args)
     if now_time >= timestamp + plant_time then
         time_long = plant_time
     end
-    land.plant = nil
-    land.status = false
     -- 保存数据
     local efficiency = OUTPUT_EFFICIENCY[land.star]
-    local total = plant.uint * time_long * efficiency / 10
+    local total = plant.uint * time_long * efficiency * (1 - 0.1 * land.steal_count)/ 10
     total = math.floor(total)
     chainhelper:log('收获' .. total .. token_id)
     -- 解锁并转发到账户
     CToken.TransferOut(token_id, total)
     -- 记录到nft以备共享数据
+    land.plant = nil
+    land.steal_count = nil
+    land.steal_info = nil
+    land.status = false
     nft_land[land_key] = land
     chainhelper:change_nht_active_by_owner(contract_base_info.caller, nft_id, false)
     chainhelper:nht_describe_change(nft_id,NFT_CONTRACT_INFO,cjson.encode(nft_land),false)
     chainhelper:change_nht_active_by_owner(contract_base_info.owner, nft_id, false)
 end
 
+function Steal(args)
+    -- 开始偷菜了
+    local _args = cjson.decode(args)
+    assert(#_args == 2, "#参数不对！#")
+    local nft_id = _args[1]
+    local land_key = _args[2]
+    local nft_land = _get_nft_contract_info(nft_id)
+    local land =  nft_land[land_key]
+    assert(land ~= nil,"#土地未开垦！#")
+    assert(land.status, "#土地未种植！#")
+    if land.steal_count == nil then land.steal_count = 0 end
+    if land.steal_info == nil then land.steal_info = {} end
+    assert(land.steal_count < MAX_STEAL_COUNT, "#这块地已经损失了操过一半了，给主人留点吧！#")
+    local plant = land.plant
+    local timestamp = plant.timestamp
+    local token_id = plant.token_id
+    local plant_time = plant.time
+    local now_time = chainhelper:time()
+    local time_long = now_time - timestamp
+    if now_time >= timestamp + plant_time then
+        time_long = plant_time
+    end
+    -- 偷取
+    local efficiency = OUTPUT_EFFICIENCY[land.star]
+    local total = plant.uint * time_long * efficiency * (1 - 0.1 * land.steal_count)/ 10
+    total = math.floor(total * 0.1)
+    chainhelper:log(contract_base_info.caller .. '偷取' .. total .. token_id)
+    -- 解锁并转发到账户
+    CToken.TransferOut(token_id, total)
+    -- 记录到nft以备共享数据
+    land.steal_count = land.steal_count + 1 -- 被偷次数+1
+    land.steal_info[contract_base_info.caller] = total -- 记录偷盗者信息，方便报仇，雪恨
+    nft_land[land_key] = land
+    chainhelper:change_nht_active_by_owner(contract_base_info.caller, nft_id, false)
+    chainhelper:nht_describe_change(farm.nft_id,NFT_CONTRACT_INFO,cjson.encode(nft_land),false)
+    chainhelper:change_nht_active_by_owner(contract_base_info.owner, nft_id, false)
+end
 
 function test() chainhelper:log('!- 3') end
