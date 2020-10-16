@@ -268,14 +268,17 @@ function Steal(args)
     -- 开始偷菜了
     local _args = cjson.decode(args)
     assert(#_args == 2, "#参数不对！#")
+    local farm = private_data.farm
     local nft_id = _args[1]
     local land_key = _args[2]
+    assert(nft_id ~= farm.nft_id, "#不能偷自己的！#")
     local nft_land = _get_nft_contract_info(nft_id)
     local land =  nft_land[land_key]
     assert(land ~= nil,"#土地未开垦！#")
     assert(land.status, "#土地未种植！#")
     if land.steal_count == nil then land.steal_count = 0 end
     if land.steal_info == nil then land.steal_info = {} end
+    assert(land.steal_info[contract_base_info.caller] == nil, "#这块地你已经偷过了，给主人留点吧！#")
     assert(land.steal_count < MAX_STEAL_COUNT, "#这块地已经损失了操过一半了，给主人留点吧！#")
     local plant = land.plant
     local timestamp = plant.timestamp
@@ -298,7 +301,7 @@ function Steal(args)
     land.steal_info[contract_base_info.caller] = total -- 记录偷盗者信息，方便报仇，雪恨
     nft_land[land_key] = land
     chainhelper:change_nht_active_by_owner(contract_base_info.caller, nft_id, false)
-    chainhelper:nht_describe_change(farm.nft_id,NFT_CONTRACT_INFO,cjson.encode(nft_land),false)
+    chainhelper:nht_describe_change(nft_id,NFT_CONTRACT_INFO,cjson.encode(nft_land),false)
     chainhelper:change_nht_active_by_owner(contract_base_info.owner, nft_id, false)
 end
 
