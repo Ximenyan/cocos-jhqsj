@@ -62,13 +62,13 @@ function _TransferIn(symbol_or_id, amount)
     local dev_amount = math.floor(amount * G_CONFIG.DEV_DIVIDEND_RATE)
     local com_amount = math.floor(amount * G_CONFIG.COMMUNITY_DIVIDEND_RATE)
     local lock_amount = math.floor(amount - dev_amount -com_amount)
-    local accept_amount = amount - lock_amount
+    --local accept_amount = amount - lock_amount
     chainhelper:transfer_from_caller(contract_base_info.owner, lock_amount, symbol_or_id, true)
     chainhelper:adjust_lock_asset(symbol_or_id, lock_amount)
     -- 转给开发账户
-    chainhelper:transfer_from_caller(G_CONFIG.ASSET_ACCEPT_ACCOUNT, accept_amount, symbol_or_id, true)
+    chainhelper:transfer_from_caller(G_CONFIG.ASSET_ACCEPT_ACCOUNT, dev_amount, symbol_or_id, true)
     -- 转给社区
-    chainhelper:transfer_from_caller(G_CONFIG.COMMUNITY_ACCEPT_ACCOUNT, accept_amount, symbol_or_id, true)
+    chainhelper:transfer_from_caller(G_CONFIG.COMMUNITY_ACCEPT_ACCOUNT, com_amount, symbol_or_id, true)
 end
 
 function _LockAsset(symbol_or_id, amount)
