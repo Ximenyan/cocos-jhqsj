@@ -87,6 +87,7 @@ function update_shop(ids)
     while (n <= len) do
         local seed_id = ids[n]
         shop[seed_id] = public_data.seed[seed_id]
+        n = n + 1
     end
     public_data.shop = shop
     write_list = { public_data = { shop = true } }
@@ -279,7 +280,7 @@ function Steal(args)
     assert(#_args == 2, "#参数不对！#")
     local farm = private_data.farm
     local attrs = private_data.attrs
-    assert(farm.sacrifice,"#还没献祭呢！#")
+    assert(farm.Sacrifice ,"#还没献祭呢！#")
     local nft_id = _args[1]
     local land_key = _args[2]
     assert(nft_id ~= farm.nft_id, "#不能偷自己的！#")
@@ -351,13 +352,14 @@ end
 function Sacrifice(args) 
     local _args = cjson.decode(args)
     assert(#_args == 1, "#参数不对！#")
+    assert(farm.Sacrifice ~= true, "#你已经献祭过了，不信可以刷新刷新！#")
     local farm = private_data.farm
     local COIN_SYMBOL = _args[1]
     local amount = G_CONFIG.SACRIFICE_COINS[COIN_SYMBOL]
     assert(amount ~= nil,"#不能用这个货币献祭！#")
     CToken.TransferIn(COIN_SYMBOL,amount)
     chainhelper:log("献祭成功！")
-    farm.sacrifice = true
+    farm.Sacrifice = true
 end
 
 function test() chainhelper:log('!- 3') end
