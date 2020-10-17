@@ -19,6 +19,8 @@ end
 function set_guide(account)
     _read_data()
     assert(account ~= contract_base_info.caller,"#邀请人不能是自己！#")
+    assert(account ~= "1.2.1254100","#邀请人不能是锁仓人！#")
+    assert(account ~= "jhqsj-token","#邀请人不能是锁仓人！#")
     assert(private_data.guide == nil, "#已经填写过接引人了！#")
     local balance = chainhelper:get_account_balance(account, "DSC")
     assert(balance > 100000, "#持有DSC大于1的人，才能当接引人！#")

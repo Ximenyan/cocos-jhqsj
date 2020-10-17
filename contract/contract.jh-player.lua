@@ -101,16 +101,16 @@ function register(args)
     assert(args_table.gender ~= nil and args_table.gender <= 1 and 0 <=
             args_table.gender, "#Error:args error!") -- 性别
     assert(args_table.root_bone ~= nil and args_table.root_bone <= 60 and 0 <
-            args_table.root_bone, "#Error:args error!") -- 根骨
+            args_table.root_bone, "#Error:Error:根骨需要<=60!!") -- 根骨
     assert(
             args_table.understanding ~= nil and args_table.understanding <= 60 and 0 <
-                    args_table.understanding, "#Error:args error!") -- 悟性
+                    args_table.understanding, "#Error:悟性需要<=60!!") -- 悟性
 
     assert(args_table.luck ~= nil and args_table.luck <= 60 and 0 <
-            args_table.luck, "#Error:args error!") -- 福源
+            args_table.luck, "#Error:福源需要<=60!") -- 福源
     -- 三种先天属性必须不多不少90点
-    assert(args_table.luck + args_table.root_bone + args_table.understanding ==
-            90, "#Error:args error!")
+    assert(args_table.luck + args_table.root_bone + args_table.understanding <=
+            90, "#三种先天属性必须不多余90点!")
     -- 更新这该死的属性
     update_luck(args_table.luck)
     update_understanding(args_table.understanding)
