@@ -387,6 +387,7 @@ function KeepADog(args)
         dog_info.timestamp = now_time
     end
     nft_land.dog_info = dog_info
+    chainhelper:log("喂狗成功,卞成苟暴走了...")
     chainhelper:change_nht_active_by_owner(contract_base_info.caller, nft_id, false)
     chainhelper:nht_describe_change(nft_id,NFT_CONTRACT_INFO,cjson.encode(nft_land),false)
     chainhelper:change_nht_active_by_owner(contract_base_info.owner, nft_id, false)
@@ -408,11 +409,12 @@ function KillADog(args)
     -- 30分钟可打一次
     assert((chainhelper:time() - dog_info.kill_timestamp) > (30 * 60), "#这条狗刚被打，求放过！#")
     -- 取决于打狗人的根骨，造成伤害
-    dog_info.growt = dog_info.growt - math.floor(attrs.innate_attr.root_bone / 2)
+    dog_info.growt = dog_info.growt - math.floor(attrs.innate_attr.root_bone / 10)
     if dog_info.growt < 0 then dog_info.growt = 0 end
     dog_info.kill_timestamp = chainhelper:time()
     dog_info.kill_acct = contract_base_info.caller
     nft_land.dog_info = dog_info
+    chainhelper:log("卞成苟被爆揍了一顿了...")
     chainhelper:change_nht_active_by_owner(contract_base_info.caller, nft_id, false)
     chainhelper:nht_describe_change(nft_id,NFT_CONTRACT_INFO,cjson.encode(nft_land),false)
     chainhelper:change_nht_active_by_owner(contract_base_info.owner, nft_id, false)
