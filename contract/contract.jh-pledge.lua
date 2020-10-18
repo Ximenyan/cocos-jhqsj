@@ -37,7 +37,8 @@ function Pledge(num)
     --  持质押持股
     _read_data()
     assert(type(num) == "number", "#num不正确#")
-    local new_num = math.floor(num * PRECISION)
+    local new_num = math.floor(num * PRECISION)   
+    if private_data.plegde_num == nil then private_data.plegde_num = 0 end
     assert((private_data.plegde_num > 0) or (new_num >= MIN_PLEDGE and new_num < MAX_PLEDGE),"#最小质押100DSC!#")
     chainhelper:transfer_from_caller(contract_base_info.owner, new_num, COIN_SYMBOL, true)
     chainhelper:adjust_lock_asset(COIN_SYMBOL, new_num)--锁仓

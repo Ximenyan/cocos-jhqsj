@@ -285,6 +285,17 @@ function Steal(args)
     local land_key = _args[2]
     assert(nft_id ~= farm.nft_id, "#不能偷自己的！#")
     local nft_land = _get_nft_contract_info(nft_id)
+    local dog_info =  nft_land.dog_info
+    if dog_info == nil then 
+        dog_info = {
+            growt = 0,
+            timestamp = 0,
+            kill_timestamp = 0
+        } 
+    end
+    local now_time = chainhelper:time()
+    -- 狗防御两小时,被揍5钟内可偷
+    assert( (now_time < (dog_info.kill_timestamp + 300)) or (now_time > (dog_info.timestamp + (240 * 60))), "#狗很凶，没法偷窃！#") 
     local land =  nft_land[land_key]
     assert(land.status ~= nil,"#土地未开垦！#")
     assert(land.status, "#土地未种植！#")
@@ -296,7 +307,6 @@ function Steal(args)
     local timestamp = plant.timestamp
     local token_id = plant.token_id
     local plant_time = plant.time
-    local now_time = chainhelper:time()
     local time_long = now_time - timestamp
     if now_time >= timestamp + plant_time then
         time_long = plant_time
@@ -315,10 +325,12 @@ function Steal(args)
     local random_number = chainhelper:random() % 10000
     local total = 0
     local status = true
-    -- 现质押罚金
+    -- 先质押罚金
     local forfeit = G_CONFIG.STEAL_FORFEIT * land.star
     chainhelper:transfer_from_caller(contract_base_info.owner, forfeit,"COCOS",true)
-    if random_number > ((land.star-1) * 200 + 5000 - attrs.innate_attr.luck) then 
+    local luck_num = attrs.innate_attr.luck * 10 -- 福源加成
+    local dog_num = dog_info.growt / 10 --狗提供的防御
+    if random_number > ((land.star-1) * 200 + 4600 - luck_num + dog_num) then 
         local steal_success_count = 0
         for _, value in pairs(land.steal_info) do
             if value[0] then steal_success_count = steal_success_count + 1 end
@@ -349,11 +361,68 @@ function Steal(args)
     chainhelper:change_nht_active_by_owner(contract_base_info.owner, nft_id, false)
 end 
 
+function KeepADog(args) 
+    -- 喂狗可以减少被偷次数
+    -- 喂狗消耗40DSC, 防御2个小时,冷却2小时10分钟，没喂一次增加成长值，成长值提高防御力
+    CToken.TransferIn("DSC", 4000000)
+    local farm = private_data.farm
+    local attrs = private_data.attrs
+    -- 狗的悟性，跟随人的悟性，狗即使是你，你既是狗，狗人合一，人狗不分
+    local nft_id = private_data.farm.nft_id
+    local nft_land = _get_nft_contract_info(nft_id)
+    local dog_info =  nft_land.dog_info
+    local now_time = chainhelper:time()
+    if dog_info == nil then 
+        dog_info = {
+            growt = attrs.innate_attr.understanding,
+            timestamp=now_time,
+            kill_timestamp = 0,
+            kill_acct = ""
+        } 
+    else 
+        -- 冷却4小时
+        assert((dog_info.timestamp + 240 * 60) < now_time, "#这条狗已经吃饱了，还没消化呢！#")
+        dog_info.growt = dog_info.growt + attrs.innate_attr.understanding
+        if dog_info.growt > 10000 then dog_info.growt = 10000 end
+        dog_info.timestamp = now_time
+    end
+    nft_land.dog_info = dog_info
+    chainhelper:change_nht_active_by_owner(contract_base_info.caller, nft_id, false)
+    chainhelper:nht_describe_change(nft_id,NFT_CONTRACT_INFO,cjson.encode(nft_land),false)
+    chainhelper:change_nht_active_by_owner(contract_base_info.owner, nft_id, false)
+end
+
+function KillADog(args) 
+    -- 打狗 10 DSC一次
+    local _args = cjson.decode(args)
+    assert(#_args == 1, "#参数不对！#")
+    local nft_id = _args[1]
+    CToken.TransferIn("DSC", 1000000)
+    local farm = private_data.farm
+    local attrs = private_data.attrs
+    assert(nft_id ~= farm.nft_id, "#不要打自己的狗#")
+    local nft_land = _get_nft_contract_info(nft_id)
+    local dog_info =  nft_land.dog_info
+    assert(dog_info ~= nil,"#这条狗快饿死了，求放过！#")
+    if dog_info.kill_timestamp == nil then dog_info.kill_timestamp = 0 end
+    -- 30分钟可打一次
+    assert((chainhelper:time() - dog_info.kill_timestamp) > (30 * 60), "#这条狗刚被打，求放过！#")
+    -- 取决于打狗人的根骨，造成伤害
+    dog_info.growt = dog_info.growt - math.floor(attrs.innate_attr.root_bone / 2)
+    if dog_info.growt < 0 then dog_info.growt = 0 end
+    dog_info.kill_timestamp = chainhelper:time()
+    dog_info.kill_acct = contract_base_info.caller
+    nft_land.dog_info = dog_info
+    chainhelper:change_nht_active_by_owner(contract_base_info.caller, nft_id, false)
+    chainhelper:nht_describe_change(nft_id,NFT_CONTRACT_INFO,cjson.encode(nft_land),false)
+    chainhelper:change_nht_active_by_owner(contract_base_info.owner, nft_id, false)
+end
+
 function Sacrifice(args) 
     local _args = cjson.decode(args)
     assert(#_args == 1, "#参数不对！#")
-    assert(farm.Sacrifice ~= true, "#你已经献祭过了，不信可以刷新刷新！#")
     local farm = private_data.farm
+    assert(farm.Sacrifice ~= true, "#你已经献祭过了，不信可以刷新刷新！#")
     local COIN_SYMBOL = _args[1]
     local amount = G_CONFIG.SACRIFICE_COINS[COIN_SYMBOL]
     assert(amount ~= nil,"#不能用这个货币献祭！#")
