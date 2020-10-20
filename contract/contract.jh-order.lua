@@ -60,7 +60,7 @@ function sell_order(args)
     assert(type(coin_type) == "string", "#参数2类型不对！#") -- 数量
     assert(coin_type == "DSC" or coin_type == "COCOS", "#货币类型类型不对！#") -- 数量
     local max_number = chainhelper:number_max()
-    assert(price * count * DSC_PRECISION < max_number, "#定价超过最大值了！#")
+    assert(price * count * PRECISION < max_number, "#定价超过最大值了！#")
     local package = private_data.backpack
     local nft_id = private_data.match_up
     local nft = nil
@@ -122,7 +122,7 @@ function fill_order(args)
     local cid = sell_good.base_info.cid
     assert(sell_good.count >= count, "#剩余的没那么多了！#")
     -- 先转钱
-    local amount = math.floor(sell_good.price * sell_good.count * PRECISION) 
+    local amount = math.floor(sell_good.price * count * PRECISION) 
     local rate_amount =  math.floor(amount * RATE[coin_type])
     chainhelper:transfer_from_caller(nft.owner,amount,coin_type,true)
     -- 买家出手续费
