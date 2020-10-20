@@ -11,6 +11,7 @@ ATTRS_CONTRACT = "contract.jh-player"
 FARMS_CONTRACT  = "contract.jh-farms"
 TOKEN_CONTRACT = "contract.jh-token"
 GIFT_CONTRACT = "contract.jh-gift"
+ORDER_CONTRACT = "contract.jh-order"
 CONTRACT_CONFIGS = "contract.jh-configs"
 
 local function _ContractConfig()
@@ -37,6 +38,7 @@ local function PlayerFarms() return c(FARMS_CONTRACT) end
 local function PlayerItems() return c(ITEMS_CONTRACT) end
 local function TokenContract() return c(TOKEN_CONTRACT) end
 local function GiftContract() return c(GIFT_CONTRACT) end
+local function OrderContract() return c(ORDER_CONTRACT) end
 
 local function _check_account()
     -- 拒绝合约调用
@@ -111,6 +113,17 @@ function Discard(cid, num)
     assert(private_data.ver, "#注册后才能调用！#")
     local CPlayerPackage = PlayerPackage()
     CPlayerPackage.spent_item(cid,num)
+    chainhelper:write_chain()
+end
+
+--撮合订单
+function MatchUpOrder(method, args)
+    _check_account()
+    _initPrivateData()
+    assert(private_data.ver, "#注册后才能开启市场！#")
+    local COrderContract = OrderContract()
+    COrderContract.CPlayerPackage = PlayerPackage()
+    COrderContract[method](args)
     chainhelper:write_chain()
 end
 
