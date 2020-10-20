@@ -8,7 +8,7 @@
 PRECISION = 100000
 MIN_PLEDGE = 100 * PRECISION
 MAX_PLEDGE = 30000000 * PRECISION
-TIMES = 1 * 60
+TIMES = 24 * 60 * 60
 COIN_SYMBOL = "DSC"
 CONTRACT_TOKEN = "contract.jh-token"
 CONTRACT_CONFIGS = "contract.jh-configs"
@@ -38,7 +38,7 @@ function Pledge(num)
     _read_data()
     assert(type(num) == "number", "#num不正确#")
     local new_num = math.floor(num * PRECISION)
-    assert(new_num >= MIN_PLEDGE and new_num < MAX_PLEDGE,"#最小质押100DSC!#")
+    assert((private_data.plegde_num > 0) or (new_num >= MIN_PLEDGE and new_num < MAX_PLEDGE),"#最小质押100DSC!#")
     chainhelper:transfer_from_caller(contract_base_info.owner, new_num, COIN_SYMBOL, true)
     chainhelper:adjust_lock_asset(COIN_SYMBOL, new_num)--锁仓
     if private_data.plegde_num == nil then

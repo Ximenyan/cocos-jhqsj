@@ -18,6 +18,14 @@ local function _public_data()
     return chainhelper:get_contract_public_data(CONTRACT_NAME)
 end
 
+function DelGiftInfo(gift_hash)
+    assert(chainhelper:is_owner(), "#没有权限！#")
+    read_list = {public_data={}}
+    chainhelper:read_chain()
+    public_data[gift_hash] = nil
+    chainhelper:write_chain()
+end
+
 function UpdateGiftInfo(gift_hash,gift_info)
     assert(chainhelper:is_owner(), "#没有权限！#")
     read_list = {public_data={}}
@@ -68,5 +76,4 @@ function ReceiveGift(secret_code)
     -- 将物品放进背包
     local gifts = gift_info.gifts
     for i =1,#gifts do CPlayerPackage.pickup_item(gifts[i].cid, gifts[i]) end
-    
 end
