@@ -65,7 +65,6 @@ end
 function Pledge(lp_id) 
     --  持质押持股
     _read_data()
-    -- 主网放开
     --assert(contract_base_info.caller == "1.2.29340","#测试中，仅owner可用！#")
     lp_id=tostring(lp_id)
     _invokeContractFunction(CONTRACT_CROSWAP, "checkLP", lp_id)
@@ -88,6 +87,7 @@ function Pledge(lp_id)
         private_data.plegde_num= private_data.plegde_num + new_num
         table.insert(private_data.lp_ids, lp_id)
     end
+    assert(#private_data.lp_ids < 7,"#你质押的LP太多，请先赎回，到CROSWAP上合成一下！#")
     if public_data.total == nil then public_data.total = 0 end
     public_data.total = public_data.total + new_num
     chainhelper:transfer_nht_from_caller(contract_base_info.owner, lp_id, true)
@@ -100,7 +100,6 @@ function Withdraw()
     _read_data()
     _ContractConfig()
     _CToken()
-    -- 主网放开
     --assert(contract_base_info.caller == "1.2.29340","#测试中，仅owner可用！#")
     assert(private_data.plegde_num ~= nil and private_data.plegde_num > 0, "#还没质押持股呢！#")
     assert(chainhelper:time() > (private_data.timestamp + TIMES), "#每24小时可领取收益一次！#")
@@ -117,7 +116,7 @@ function Withdraw()
             withdraw_balance = (balance / 100) * (private_data.plegde_num / public_data.total)
             withdraw_balance = math.floor(withdraw_balance)
             if withdraw_balance > 0 then 
-                --chainhelper:log('transfer '.. coin_symbol .. withdraw_balance)
+                chainhelper:log('领取分红 '.. coin_symbol .. withdraw_balance)
                 CToken.TransferOut(coin_symbol, withdraw_balance)
             end
         end
@@ -128,10 +127,9 @@ end
 function Redeem()
     -- 赎回
     _read_data()
-    -- 主网放开
     --assert(contract_base_info.caller == "1.2.29340","#测试中，仅owner可用！#")
     assert(private_data.plegde_num ~= nil and private_data.plegde_num > 0,"#还没质押持股呢！#")
-    assert(chainhelper:time() > (private_data.timestamp + TIMES),"#领取分红24小时后可赎回！#")
+    assert(chainhelper:time() > (private_data.timestamp + TIMES),"#领取或质押24小时后可赎回！#")
     chainhelper:log(contract_base_info.caller .. "赎回了" .. private_data.plegde_num .. " COCOS-DSC-LP liquidity!")
     public_data.total = public_data.total - private_data.plegde_num
     private_data.plegde_num = 0
@@ -139,6 +137,6 @@ function Redeem()
     for i=1,#private_data.lp_ids do 
         chainhelper:transfer_nht_from_owner(contract_base_info.caller, private_data.lp_ids[i], true)
     end
-    private_data.lp_ids = {}
+    private_data.lp_id = {}
     _save_data()
 end
