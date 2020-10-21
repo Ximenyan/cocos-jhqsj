@@ -155,7 +155,7 @@ function del_order(args)
     assert(type(order_id) == "string", "#order_id类型不对！#") -- CID
     local nft = _get_nft_contract_info(nft_id)
     assert(nft.sell ~= nil, "#nft_id 错误！#")
-    local sell_good = nft_sell[order_id]
+    local sell_good = nft.sell[order_id]
     assert(sell_good ~= nil,"#物品已经不在了！#")
     local cid = sell_good.base_info.cid
     -- 放入玩家背包
