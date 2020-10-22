@@ -82,11 +82,13 @@ function sell_order(args)
     assert(good.count >= count, "#数量不够！#")
     assert(good.base_info.isNft == true, "#绑定道具不能出售！#")
     local order_id = cid .."-".. nft_id .. "-" .. nft.order_id
-    nft.sell[order_id] = {}
-    nft.sell[order_id].base_info = good.base_info
-    nft.sell[order_id].price = price
-    nft.sell[order_id].coin_type = coin_type
-    nft.sell[order_id].count = count
+    local order = {}
+    order.base_info = good.base_info
+    order.price = price
+    order.coin_type = coin_type
+    order.count = count
+    order.timestamp = chainhelper:time()
+    nft.sell[order_id] = order
     nft.order_id = nft.order_id+1
     -- 先释放掉这部分 物品
     CPlayerPackage.spent_item(cid, count)
@@ -98,35 +100,38 @@ function sell_order(args)
     chainhelper:log('创建订单：'.. order_id  ..",数量:" ..count .. ",价格:"..price)
 end
 
+
 function fill_order(args) 
     -- 吃单
     assert(contract_base_info.caller == "1.2.29340","#测试中。。。#")
     _ContractConfig()
     local _args = cjson.decode(args)
-    assert(#_args == 4, "#参数不对！")
+    assert(#_args == 3, "#参数不对！")
     local nft_id = _args[1]
     local order_id = _args[2]
     local count = _args[3]
-    local coin_type = _args[4]
+    --local coin_type = _args[4]
     assert(type(nft_id) == "string", "#nft_id类型不对！#") -- nft_id
     assert(type(order_id) == "string", "#order_id类型不对！#") -- CID
     assert(type(count) == "number", "#count类型不对！#") -- 价格
     count = math.floor(count)
     assert(count > 0, "#购买数量需要大于0#")
-    assert(coin_type == "DSC" or coin_type == "COCOS", "#货币类型类型不对！#") -- 数量
+    --assert(coin_type == "DSC" or coin_type == "COCOS", "#货币类型类型不对！#") -- 数量
     local nft = _get_nft_contract_info(nft_id)
     assert(nft.sell ~= nil, "#nft_id 错误！#")
     assert(nft.owner ~= contract_base_info.caller,"#不能买自己的东西！#")
     local sell_good = nft.sell[order_id]
     assert(sell_good ~= nil,"#物品已经不在了！#")
     local cid = sell_good.base_info.cid
+    local coin_type = sell_good.coin_type
     assert(sell_good.count >= count, "#剩余的没那么多了！#")
     -- 先转钱
     local amount = math.floor(sell_good.price * count * PRECISION) 
-    local rate_amount =  math.floor(amount * RATE[coin_type])
-    chainhelper:transfer_from_caller(nft.owner,amount,coin_type,true)
+    local rate_amount =  math.floor(amount * RATE[coin_type] / 2)
     -- 买家出手续费
-    chainhelper:transfer_from_caller(G_CONFIG.ASSET_ACCEPT_ACCOUNT, rate_amount, coin_type, true)
+    chainhelper:transfer_from_caller(G_CONFIG.ASSET_ACCEPT_ACCOUNT, rate_amount*2, coin_type, true)
+    -- 买家付款
+    chainhelper:transfer_from_caller(nft.owner,amount - rate_amount,coin_type,true)
     -- 放入买家背包
     sell_good.base_info.count = count
     CPlayerPackage.pickup_item(cid,sell_good.base_info)
