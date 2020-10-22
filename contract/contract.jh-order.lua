@@ -52,6 +52,7 @@ function sell_order(args)
     local price = _args[2]
     local count = _args[3]
     local coin_type = _args[4]
+    
     assert(type(cid) == "string", "#参数1类型不对！#") -- CID
     assert(type(price) == "number", "#参数2类型不对！#") -- 价格
     assert(price > 0, "#单价需要大于0！#") -- 价格
@@ -83,6 +84,11 @@ function sell_order(args)
     assert(good.base_info.isNft == true, "#绑定道具不能出售！#")
     local order_id = cid .."-".. nft_id .. "-" .. nft.order_id
     local order = {}
+    local order_number = 0
+    for _, _order in pairs(nft.sell) do
+        order_number = order_number + 1
+    end
+    assert(order_number < 3,"#只能同时挂3单！#")
     order.base_info = good.base_info
     order.price = price
     order.coin_type = coin_type
