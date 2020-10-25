@@ -330,7 +330,7 @@ function Steal(args)
     chainhelper:transfer_from_caller(contract_base_info.owner, forfeit,"COCOS",true)
     local luck_num = attrs.innate_attr.luck * 10 -- 福源加成
     local dog_num = dog_info.growt / 10 --狗提供的防御
-    if random_number > ((land.star-1) * 200 + 4600 - luck_num + dog_num) then 
+    if random_number > ((land.star-1) * 200 + 5000 - luck_num + dog_num) then 
         local steal_success_count = 0
         for _, value in pairs(land.steal_info) do
             if value[0] then steal_success_count = steal_success_count + 1 end
