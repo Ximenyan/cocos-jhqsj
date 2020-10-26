@@ -24,7 +24,21 @@ local function _ContractConfig()
         G_CONFIG = import_contract(CONTRACT_CONFIGS)
     end
 end
-
+local function _get_dsc_price() 
+    local nft = cjson.decode(chainhelper:get_nft_asset("4.2.1176342"))
+    for _, contract in pairs(nft.describe_with_contract) do
+        if contract[1] == "1.16.165" then
+            for _, describe in pairs(contract[2]) do
+                if describe[1] == "pair" then
+                    local pair = cjson.decode(describe[2])
+                    return pair.c / pair.t * 100000
+                end
+            end
+            return 10000000
+        end
+    end
+    return 10000000
+end
 local function _check_farm()
     assert(private_data.farm ~= nil, "#还没有农场，请先注册！#")
 end
@@ -255,7 +269,7 @@ function Reap(args)
     local steal_success_count = 0
     if  land.steal_info then 
         for _, value in pairs(land.steal_info) do
-            if value[0] then steal_success_count = steal_success_count + 1 end
+            if value[1] then steal_success_count = steal_success_count + 1 end
         end
     end
     local total = plant.uint * time_long * efficiency * (1 - 0.1 * steal_success_count)/ 10
@@ -279,6 +293,18 @@ function Steal(args)
     local _args = cjson.decode(args)
     assert(#_args == 2, "#参数不对！#")
     local farm = private_data.farm
+    local _self_nft_id = farm.nft_id
+    local _self_nft_land = _get_nft_contract_info(_self_nft_id)
+    local _self_land_num = 0
+    for i=0,9 do 
+        if _self_nft_land["land_"..i].status ~= nil then 
+            _self_land_num = _self_land_num + 1
+            if _self_land_num >= 2 then
+                break
+            end
+        end
+    end
+    assert(_self_land_num >= 2,"#你自己的土地数太少，不能偷窃！#");
     local attrs = private_data.attrs
     assert(farm.Sacrifice ,"#还没献祭呢！#")
     local nft_id = _args[1]
@@ -323,20 +349,21 @@ function Steal(args)
     -- 5 星 58%
     -- 6 星 60%
     local random_number = chainhelper:random() % 10000
-    local total = 0
+    local steal_success_count = 0
+    for _, value in pairs(land.steal_info) do
+        if value[1] then steal_success_count = steal_success_count + 1 end
+    end
+    local total = plant.uint * time_long * efficiency * (1 - 0.1 * steal_success_count) / 10
+    total = math.floor(total * 0.1)
+    local dsc_price = _get_dsc_price()
     local status = true
+
     -- 先质押罚金
-    local forfeit = G_CONFIG.STEAL_FORFEIT * land.star
+    local forfeit = math.floor(total * dsc_price * 0.9)
     chainhelper:transfer_from_caller(contract_base_info.owner, forfeit,"COCOS",true)
     local luck_num = attrs.innate_attr.luck * 10 -- 福源加成
     local dog_num = dog_info.growt / 10 --狗提供的防御
     if random_number > ((land.star-1) * 200 + 5000 - luck_num + dog_num) then 
-        local steal_success_count = 0
-        for _, value in pairs(land.steal_info) do
-            if value[0] then steal_success_count = steal_success_count + 1 end
-        end
-        total = plant.uint * time_long * efficiency * (1 - 0.1 * steal_success_count) / 10
-        total = math.floor(total * 0.1)
         chainhelper:log(contract_base_info.caller .. '偷取' .. (total/100000) .. token_id)
         -- 解锁并转发到账户
         CToken.TransferOut(token_id, total)
