@@ -26,6 +26,17 @@ function DelGiftInfo(gift_hash)
     chainhelper:write_chain()
 end
 
+function AddGiftCount(gift_hash,user)
+    assert(chainhelper:is_owner(), "#没有权限！#")
+    read_list = {public_data={}}
+    chainhelper:read_chain()
+    local gift = public_data[gift_hash]
+    gift.count = gift.count + 1
+    if gift.receiver == nil then gift.receiver = {} end
+    gift.receiver[user] = true
+    chainhelper:write_chain()
+end
+
 function UpdateGiftInfo(gift_hash,gift_info)
     assert(chainhelper:is_owner(), "#没有权限！#")
     read_list = {public_data={}}
@@ -44,6 +55,11 @@ function _AfterReceiveGift(gift_hash)
     private_data[gift_hash] = {}
     if public_data[gift_hash].count then
         public_data[gift_hash].count = public_data[gift_hash].count - 1
+    end
+    local gift = public_data[gift_hash]
+    if gift.receiver ~= nil then 
+        assert(gift.receiver[contract_base_info.caller],"#你已经领过了，请到背包查看！#")
+        gift.receiver[contract_base_info.caller] = nil
     end
     write_list = {private_data={}, public_data={}}
     chainhelper:write_chain()
