@@ -86,6 +86,7 @@ function Pledge(lp_id)
         }
     else
         private_data.plegde_num= private_data.plegde_num + new_num
+        private_data.timestamp=chainhelper:time(),
         table.insert(private_data.lp_ids, lp_id)
     end
     assert(#private_data.lp_ids < 7,"#你质押的LP太多，请先赎回，到CROSWAP上合成一下！#")
