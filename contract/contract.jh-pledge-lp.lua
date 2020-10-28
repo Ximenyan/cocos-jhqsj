@@ -76,6 +76,7 @@ function Pledge(lp_id)
     assert(lp.version == 1, "#质押的lp版本不对#")
     local new_num = lp.liquidity
     if private_data.plegde_num == nil then private_data.plegde_num = 0 end
+    if  private_data.plegde_num == 0 then private_data.lp_ids = {} end
     assert((private_data.plegde_num > 0) or (new_num >= 50000000 ),"#最小质押50000000 liquidity!#")
     if private_data.lp_ids == nil then
         private_data = {
@@ -85,6 +86,7 @@ function Pledge(lp_id)
         }
     else
         private_data.plegde_num= private_data.plegde_num + new_num
+        private_data.timestamp=chainhelper:time(),
         table.insert(private_data.lp_ids, lp_id)
     end
     assert(#private_data.lp_ids < 7,"#你质押的LP太多，请先赎回，到CROSWAP上合成一下！#")
@@ -137,6 +139,6 @@ function Redeem()
     for i=1,#private_data.lp_ids do 
         chainhelper:transfer_nht_from_owner(contract_base_info.caller, private_data.lp_ids[i], true)
     end
-    private_data.lp_id = {}
+    private_data.lp_ids = {}
     _save_data()
 end
