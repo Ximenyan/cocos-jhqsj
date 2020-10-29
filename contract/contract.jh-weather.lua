@@ -33,6 +33,7 @@ function init()
     chainhelper:read_chain()
     public_data.weather_table = {
         sunny=1,
+        fog=1,
         rain=1,
         snow=1,
         cloud=1
