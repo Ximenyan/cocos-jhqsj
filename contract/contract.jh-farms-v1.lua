@@ -234,6 +234,7 @@ function Plant(args)
     plant.uint = seed_config[seed_id].uint
     plant.timestamp = chainhelper:time()
     plant.token_id = seed_config[seed_id].token_id
+    plant.item_id = seed_config[seed_id].item_id
     -- 记录到NFT
     land.plant = plant
     -- 记录到nft以备共享数据
@@ -258,6 +259,7 @@ function Reap(args)
     local plant = land.plant
     local timestamp = plant.timestamp
     local token_id = plant.token_id
+    local item_id = plant.item_id
     local plant_time = plant.time
     local now_time = chainhelper:time()
     local time_long = now_time - timestamp
@@ -274,9 +276,14 @@ function Reap(args)
     end
     local total = plant.uint * time_long * efficiency * (1 - 0.1 * steal_success_count)/ 10
     total = math.floor(total)
-    chainhelper:log('收获' .. (total/100000) .. token_id)
     -- 解锁并转发到账户
-    CToken.TransferOut(token_id, total)
+    if string.sub(token_id,1,1) ~= "[" then 
+        chainhelper:log('收获' .. (total/100000) .. token_id)
+        CToken.TransferOut(token_id, total)
+    else 
+        chainhelper:log('收获' .. total .. token_id)
+        CPlayerItems.create_item_to_package(item_id, total)
+    end
     -- 记录到nft以备共享数据
     land.plant = nil
     land.steal_count = nil
@@ -332,6 +339,7 @@ function Steal(args)
     local plant = land.plant
     local timestamp = plant.timestamp
     local token_id = plant.token_id
+    local item_id = plant.item_id
     local plant_time = plant.time
     local time_long = now_time - timestamp
     if now_time >= timestamp + plant_time then
@@ -366,7 +374,13 @@ function Steal(args)
     if random_number > ((land.star-1) * 200 + 5000 - luck_num + dog_num) then 
         chainhelper:log(contract_base_info.caller .. '偷取' .. (total/100000) .. token_id)
         -- 解锁并转发到账户
-        CToken.TransferOut(token_id, total)
+        if string.sub(token_id,1,1) ~= "[" then 
+            chainhelper:log('收获' .. (total/100000) .. token_id)
+            CToken.TransferOut(token_id, total)
+        else 
+            chainhelper:log('收获' .. total .. token_id)
+            CPlayerItems.create_item_to_package(item_id, total)
+        end
         -- 返还罚金
         chainhelper:transfer_from_owner(contract_base_info.caller, forfeit, "COCOS", true)
     else 
