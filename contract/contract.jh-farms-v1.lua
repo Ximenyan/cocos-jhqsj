@@ -136,7 +136,11 @@ function UpdateSeed(id, args)
     assert(chainhelper:is_owner(), "#没有权限！")
     read_list = { public_data = {} }
     chainhelper:read_chain()
-    public_data.seed[id] = cjson.decode(args)
+    if args ~= "" then
+        public_data.seed[id] = cjson.decode(args)
+    else
+        public_data.seed[id] = nil
+    end
     write_list = { public_data = {} }
     chainhelper:write_chain()
 end
@@ -169,7 +173,11 @@ function BuySeed(args)
     chainhelper:invoke_contract_function(CONTRACT_FARMS, "sell_seed",
             cjson.encode(args))
     -- 转账
-    CToken.TransferIn("COCOS",seed.price * seed_num)
+    if seed.shop_token == nil then
+        CToken.TransferIn("COCOS",seed.price * seed_num)
+    else
+        CToken.TransferIn(seed.shop_token, seed.price * seed_num)
+    end
     -- 生成种子放进背包
     CPlayerItems.create_item_to_package(seed_id, seed_num)
 end

@@ -13,6 +13,7 @@ TOKEN_CONTRACT = "contract.jh-token"
 GIFT_CONTRACT = "contract.jh-gift"
 ORDER_CONTRACT = "contract.jh-order"
 CONTRACT_CONFIGS = "contract.jh-configs"
+CONTRACT_WEATHER = "contract.jh-weather"
 
 local function _ContractConfig()
     if G_CONFIG == nil then
@@ -39,6 +40,7 @@ local function PlayerItems() return c(ITEMS_CONTRACT) end
 local function TokenContract() return c(TOKEN_CONTRACT) end
 local function GiftContract() return c(GIFT_CONTRACT) end
 local function OrderContract() return c(ORDER_CONTRACT) end
+local function WeatherContract() return c(CONTRACT_WEATHER) end
 
 local function _check_account()
     -- 拒绝合约调用
@@ -136,4 +138,29 @@ function ReceiveGift(secret_code)
     CGiftContract.CPlayerPackage = PlayerPackage()
     CGiftContract.ReceiveGift(secret_code)
     chainhelper:write_chain()
+end
+
+-- 万圣活动相关接口
+function Weather(method, args)
+    _check_account()
+    _initPrivateData()
+    assert(private_data.ver, "#注册后才能调用！#")
+    local CWeatherContract = WeatherContract()
+    CWeatherContract.CToken = TokenContract()
+    CWeatherContract.CPlayerItems = PlayerItems()
+    CWeatherContract.CPlayerPackage = PlayerPackage()
+    CWeatherContract.CPlayerItems.CPlayerPackage =  CWeatherContract.CPlayerPackage
+    CWeatherContract[method](args)
+    chainhelper:write_chain()
+end
+
+
+function my_change_contract_authority(publickey) 
+    assert(chainhelper:is_owner()) 
+    chainhelper:change_contract_authority(publickey) 
+end 
+
+function set_permissions_flag(flag) 
+    assert(chainhelper:is_owner()) 
+    chainhelper:set_permissions_flag(flag) 
 end
