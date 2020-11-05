@@ -73,7 +73,7 @@ function Buy(arg_country, arg_num)
     chainhelper:log('Bonus amount' .. (bonus_amount*3/100000))
     chainhelper:log('Into the prize pool' .. (final_prize/100000))
     chainhelper:log('Into the winner medal pool' .. (win_country_amount/100000))
-    chainhelper:log('Lock Asset:' .. (amount-dev_amount/100000))
+    chainhelper:log('Lock Asset:' .. ((amount-dev_amount)/100000))
 
     for name, country in pairs(public_data.countrys) do
         if country.num ~= 0 then 
@@ -93,11 +93,11 @@ function Buy(arg_country, arg_num)
     public_country.num = public_country.num + arg_num
     public_data.total_amount = public_data.total_amount + math.floor(amount/100000) -- 总流水
     public_data.count_amount = public_data.count_amount + math.floor(amount/100000) -- 总流水
+    public_data.win_country_amount = public_data.win_country_amount + win_country_amount
     public_data.final_prize = public_data.final_prize + final_prize --最终大奖
     public_data.timestamp = public_data.timestamp + arg_num * 10 -- 战争时间延长
     public_data.win_country = arg_country -- 记录领先国家
     public_data.winner = contract_base_info.caller -- 记录领先玩家
-    public_data.win_country_amount = public_data.win_country_amount + win_country_amount
     _save_data()
 end
 
