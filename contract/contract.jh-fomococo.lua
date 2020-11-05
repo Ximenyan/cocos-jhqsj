@@ -20,12 +20,12 @@ function init()
     _read_data()
     --assert(public_data.count == nil, "#游戏已经开始了#");
     public_data = {
-        count = 0, -- 轮数
-        total_amout = 0,--总流水
+        count = 1, -- 轮数
+        total_amount = 0,--总流水
         count_amount = 0,--本轮总流水
         win_country_amount = 0,--获胜国家分红
         final_prize = 0,--最终大奖
-        timestamp = chainhelper:time() + 24 * 60 * 60,
+        timestamp = chainhelper:time(),
         countrys = {
             Wei = {num = 0, price = 0},
             Shu = {num = 0, price = 0},
@@ -52,7 +52,7 @@ function Buy(arg_country, arg_num)
         public_data.count_amount = 0
         public_data.win_country_amount = 0
         public_data.final_prize = 0
-        public_data.timestamp = chainhelper:time() + 24 * 60 * 60 --战争时间新增一天
+        public_data.timestamp = chainhelper:time() + 24 * 60 * 60 --新一轮战争时间新增加一天
         chainhelper:log(public_data.win_country .. " Won the war!A new round of war has begun!")
     end
     if private_data.countrys == nil then 
@@ -69,6 +69,12 @@ function Buy(arg_country, arg_num)
     local final_prize = math.floor(amount * FINAL_PRIZE)
     local dev_amount = math.floor(amount * DEVELOPER_PROPORTION)
     local win_country_amount = math.floor(amount * WIN_COUNTRY)
+    chainhelper:log('Pay for development costs' .. (dev_amount/100000))
+    chainhelper:log('Bonus amount' .. (bonus_amount*3/100000))
+    chainhelper:log('Into the prize pool' .. (final_prize/100000))
+    chainhelper:log('Into the winner medal pool' .. (win_country_amount/100000))
+    chainhelper:log('Lock Asset:' .. (amount-dev_amount/100000))
+
     for name, country in pairs(public_data.countrys) do
         if country.num ~= 0 then 
             public_data.countrys[name].price = country.price + math.floor(bonus_amount/country.num)
@@ -85,7 +91,8 @@ function Buy(arg_country, arg_num)
     end
     private_country.num = private_country.num + arg_num
     public_country.num = public_country.num + arg_num
-    public_data.total_amout = public_data.total_amout + math.floor(amount/100000) -- 总流水
+    public_data.total_amount = public_data.total_amount + math.floor(amount/100000) -- 总流水
+    public_data.count_amount = public_data.count_amount + math.floor(amount/100000) -- 总流水
     public_data.final_prize = public_data.final_prize + final_prize --最终大奖
     public_data.timestamp = public_data.timestamp + arg_num * 10 -- 战争时间延长
     public_data.win_country = arg_country -- 记录领先国家
