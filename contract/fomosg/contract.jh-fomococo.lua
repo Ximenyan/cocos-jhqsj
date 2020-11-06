@@ -1,3 +1,5 @@
+CONTRACT_TOKEN = "contract.fomo-token"
+CONTRACT_CONFIGS = "contract.fomo-configs"
 DEVELOPER_PROPORTION = 0.02 --开发者占比
 BOUNS_PROPORTION = 0.48 --分红占比
 FINAL_PRIZE = 0.35 --最终大奖
@@ -13,6 +15,12 @@ local function _save_data()
     -- 写数据
     write_list = {public_data = {}, private_data = {}}
     chainhelper:write_chain()
+end
+
+local function _ContractConfig()
+    if G_CONFIG == nil then
+        G_CONFIG = import_contract(CONTRACT_CONFIGS)
+    end
 end
 
 function init()
@@ -37,7 +45,10 @@ end
 
 function Buy(arg_country, arg_num)
     _read_data()
+    _ContractConfig()
+    CToken = import_contract(CONTRACT_TOKEN)
     arg_num = math.floor(arg_num)
+    assert(arg_num > 0,"#Greater than 0 is required!#")
     if public_data.winner ~= nil and chainhelper:time() > public_data.timestamp then
         -- 这一轮战争已经结束了，作为开奖人，将获得最终大奖的1%，然后开启下一轮战争
         -- 最终大奖的99% 将归终结者所有
@@ -73,8 +84,9 @@ function Buy(arg_country, arg_num)
     chainhelper:log('Bonus amount' .. (bonus_amount*3/100000))
     chainhelper:log('Into the prize pool' .. (final_prize/100000))
     chainhelper:log('Into the winner medal pool' .. (win_country_amount/100000))
-    chainhelper:log('Lock Asset:' .. ((amount-dev_amount)/100000))
-
+    chainhelper:log('Lock Asset:' .. (amount-dev_amount)/100000)
+    CToken.TransferIn("COCOS", amount - dev_amount)
+    chainhelper:transfer_from_caller(G_CONFIG.DEVELOPER_ACCOUNT, dev_amount, "COCOS", true)
     for name, country in pairs(public_data.countrys) do
         if country.num ~= 0 then 
             public_data.countrys[name].price = country.price + math.floor(bonus_amount/country.num)
@@ -92,20 +104,34 @@ function Buy(arg_country, arg_num)
     private_country.num = private_country.num + arg_num
     public_country.num = public_country.num + arg_num
     public_data.total_amount = public_data.total_amount + math.floor(amount/100000) -- 总流水
-    public_data.count_amount = public_data.count_amount + math.floor(amount/100000) -- 总流水
-    public_data.win_country_amount = public_data.win_country_amount + win_country_amount
+    public_data.count_amount = public_data.count_amount + math.floor(amount/100000) -- 本轮流水
     public_data.final_prize = public_data.final_prize + final_prize --最终大奖
     public_data.timestamp = public_data.timestamp + arg_num * 10 -- 战争时间延长
     public_data.win_country = arg_country -- 记录领先国家
     public_data.winner = contract_base_info.caller -- 记录领先玩家
+    public_data.win_country_amount = public_data.win_country_amount + win_country_amount
     _save_data()
 end
 
-function Withdraw()
-    -- public_data = {}
-    private_data = {}
-    write_list = {private_data = {}}
-    chainhelper:write_chain()
+function Withdraw(arg_country)
+    _read_data()
+    _ContractConfig()
+    CToken = import_contract(CONTRACT_TOKEN)
+    for name, country in pairs(private_data.countrys) do
+        if country.num ~= 0 then 
+            local public_country = public_data.countrys[name]
+            local sub_price = public_country.price - country.price
+            local bonus_total = sub_price * country.num
+            if bonus_total > 0 then
+                -- 刷新单位价格
+                private_data.countrys[name].price = public_data.countrys[name].price
+                chainhelper:log(contract_base_info.caller .. " Get " .. name .. " Bouns Amout: " .. (bonus_total/100000))
+                -- 转出
+                CToken.TransferOut("COCOS", bonus_total)
+            end
+        end
+    end
+    _save_data()
 end
 
 function clear()
