@@ -1,8 +1,8 @@
 CONTRACT_TOKEN = "contract.fomo-token"
 CONTRACT_CONFIGS = "contract.fomo-configs"
 DEVELOPER_PROPORTION = 0.02 -- 开发者占比
-BOUNS_PROPORTION = 0.48 -- 分红占比
-FINAL_PRIZE = 0.35 -- 最终大奖
+BOUNS_PROPORTION = 0.60 -- 分红占比
+FINAL_PRIZE = 0.23 -- 最终大奖
 WIN_COUNTRY = 0.15 -- 获胜国家分红
 
 local function _read_data()
@@ -31,7 +31,7 @@ function init()
         count_amount = 0, -- 本轮总流水
         win_country_amount = 0, -- 获胜国家分红
         final_prize = 0, -- 最终大奖
-        timestamp = chainhelper:time(),
+        timestamp = chainhelper:time() + 8 * 60 * 60,
         countrys = {
             Wei = {num = 0, price = 0},
             Shu = {num = 0, price = 0},
@@ -44,15 +44,22 @@ end
 function Buy(arg_country, arg_num)
     _read_data()
     _ContractConfig()
+    assert(contract_base_info.invoker_contract_id == "1.16.0",
+           "#没有权限！#")
     CToken = import_contract(CONTRACT_TOKEN)
     arg_num = math.floor(arg_num)
     assert(arg_num > 0, "#Greater than 0 is required!#")
     if public_data.winner ~= nil and chainhelper:time() > public_data.timestamp then
         -- 这一轮战争已经结束了，作为开奖人，将获得最终大奖的1%，然后开启下一轮战争
         -- 最终大奖的99% 将归终结者所有
+        -- 解锁代币                    
+        CToken.TransferOut("COCOS", public_data.final_prize)
         local winner_amount = math.floor(public_data.final_prize * 0.99) -- 这是发给获胜人的
         chainhelper:log(public_data.winner .. '  Won the war！amount :' ..
                             (winner_amount / 100000))
+        -- 转给获胜人
+        chainhelper:transfer_from_caller(public_data.winner, winner_amount,
+                                         "COCOS", true)
         local call_amount = public_data.final_prize - winner_amount -- 这是发给开奖人的
         chainhelper:log(
             contract_base_info.caller .. ' Draw a prize! amount :' ..
@@ -68,7 +75,7 @@ function Buy(arg_country, arg_num)
         public_data.count_amount = 0
         public_data.win_country_amount = 0
         public_data.final_prize = 0
-        public_data.timestamp = chainhelper:time() + 24 * 60 * 60 -- 新一轮战争时间新增加一天
+        public_data.timestamp = chainhelper:time() + 8 * 60 * 60 -- 新一轮战争时间新增加8h
         chainhelper:log(public_data.win_country ..
                             " Won the war!A new round of war has begun!")
     end
@@ -82,6 +89,8 @@ function Buy(arg_country, arg_num)
     local public_country = public_data.countrys[arg_country]
     local private_country = private_data.countrys[arg_country]
     local amount = arg_num * 100000000
+    local caller_balance = chainhelper:get_account_balance(contract_base_info.caller,"COCOS")
+    assert(caller_balance >= amount,"#Insufficient account balance#")
     local bonus_amount = math.floor(amount * BOUNS_PROPORTION / 3)
     local final_prize = math.floor(amount * FINAL_PRIZE)
     local dev_amount = math.floor(amount * DEVELOPER_PROPORTION)
@@ -128,17 +137,22 @@ end
 function Withdraw(arg_country)
     _read_data()
     _ContractConfig()
+    assert(contract_base_info.invoker_contract_id == "1.16.0",
+           "#没有权限！#")
     CToken = import_contract(CONTRACT_TOKEN)
     local public_country = public_data.countrys[arg_country]
     local private_country = private_data.countrys[arg_country]
     assert(public_country ~= nil, "#args error!#")
     assert(private_country ~= nil, "#args error!#")
+    assert(private_country.num > 0, "#args error!#")
     local sub_price = public_country.price - private_country.price
     local bonus_total = sub_price * private_country.num
     -- 刷新单位价格
     private_country.price = public_country.price
-    public_country.num = public_country.num - private_country.num
+    -- 清出兵力
     private_country.num = 0
+    -- 总兵力下降
+    public_country.num = public_country.num - private_country.num
     if bonus_total > 0 then
         -- 转出
         CToken.TransferOut("COCOS", bonus_total)
@@ -146,11 +160,4 @@ function Withdraw(arg_country)
                             " Bouns Amout: " .. (bonus_total / 100000))
     end
     _save_data()
-end
-
-function clear()
-    -- public_data = {}
-    private_data = {}
-    write_list = {private_data = {}}
-    chainhelper:write_chain()
 end
