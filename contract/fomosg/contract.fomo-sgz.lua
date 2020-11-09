@@ -1,9 +1,24 @@
+                                                                         
+--       _____         _____         ______  _______           _____          
+--  ____|\    \   ____|\    \       |      \/       \     ____|\    \         
+-- |    | \    \ /     /\    \     /          /\     \   /     /\    \        
+-- |    |______//     /  \    \   /     /\   / /\     | /     /  \    \       
+-- |    |----'\|     |    |    | /     /\ \_/ / /    /||     |    |    |      
+-- |    |_____/|     |    |    ||     |  \|_|/ /    / ||     |    |    |      
+-- |    |      |\     \  /    /||     |       |    |  ||\     \  /    /|      
+-- |____|      | \_____\/____/ ||\____\       |____|  /| \_____\/____/ |      
+-- |    |       \ |    ||    | /| |    |      |    | /  \ |    ||    | /      
+-- |____|        \|____||____|/  \|____|      |____|/    \|____||____|/       
+--   )/             \(    )/        \(          )/          \(    )/          
+--   '               '    '          '          '            '    '           
+
 CONTRACT_TOKEN = "contract.fomo-token"
 CONTRACT_CONFIGS = "contract.fomo-configs"
 DEVELOPER_PROPORTION = 0.02 -- 开发者占比
 BOUNS_PROPORTION = 0.70 -- 分红占比
 FINAL_PRIZE = 0.23 -- 最终大奖
 Next_Round = 0.05 -- 下一轮
+
 
 local function _read_data()
     -- 读数据
@@ -29,13 +44,12 @@ function init()
         count = 1, -- 轮数
         total_amount = 0, -- 总流水
         count_amount = 0, -- 本轮总流水
+        total_bouns_amount = 0. --分红总金额
         next_round_pool_amount = 0, -- 流入到下一轮的资金
         final_prize = 0, -- 最终大奖
         timestamp = chainhelper:time() + 8 * 60 * 60,
         countrys = {
             Donghan = {num = 0, price = 0},
-            -- Shu = {num = 0, price = 0},
-            -- Wu = {num = 0, price = 0}
         }
     }
     _save_data()
@@ -67,13 +81,6 @@ function Buy(arg_country, arg_num)
         chainhelper:log(
             contract_base_info.caller .. ' Draw a prize! amount :' ..
                 (call_amount / 100000))
-        -- local win_country = public_data.countrys[public_data.win_country]
-        -- chainhelper:log(public_data.win_country .. ' Carve Up Amount :' ..
-        --                     (public_data.win_country_amount / 100000))
-        -- win_country.price = win_country.price +
-        --                         math.floor(
-        --                             public_data.next_round_pool_amount /
-        --                                 win_country.num) -- 分红给战胜国
         public_data.count = public_data.count + 1
         public_data.count_amount = public_data.next_round_pool_amount
         public_data.next_round_pool_amount = 0
@@ -85,9 +92,6 @@ function Buy(arg_country, arg_num)
     if private_data.countrys == nil then
         private_data.countrys = {
             Donghan = {num = 0, price = 0},
-            --Wei = {num = 0, price = 0},
-            --Shu = {num = 0, price = 0},
-            --Wu = {num = 0, price = 0}
         }
     end
     local public_country = public_data.countrys[arg_country]
@@ -108,12 +112,7 @@ function Buy(arg_country, arg_num)
     CToken.TransferIn("COCOS", amount - dev_amount)
     chainhelper:transfer_from_caller(G_CONFIG.DEVELOPER_ACCOUNT, dev_amount,
                                      "COCOS", true)
-    for name, country in pairs(public_data.countrys) do
-        if country.num ~= 0 then
-            public_data.countrys[name].price =
-                country.price + math.floor(bonus_amount / country.num)
-        end
-    end
+    public_country.price = country.price + math.floor((public_data.total_bouns_amount + bonus_amount) / country.num)
     if private_country.num == 0 then
         private_country.price = public_country.price
     else
@@ -131,7 +130,7 @@ function Buy(arg_country, arg_num)
                                    math.floor(amount / 100000) -- 本轮流水
     public_data.final_prize = public_data.final_prize + final_prize -- 最终大奖
     public_data.timestamp = public_data.timestamp + arg_num * 10 -- 战争时间延长
-    --public_data.win_country = arg_country -- 记录领先国家
+    public_data.total_bouns_amount = public_data.total_bouns_amount + bonus_amount
     public_data.winner = contract_base_info.caller -- 记录领先玩家
     public_data.next_round_pool_amount = public_data.next_round_pool_amount + next_round_pool_amount
     _save_data()
